@@ -1,0 +1,52 @@
+{
+    "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+    "name": "kyle-claude-plugins",
+    "version": "1.3.0",
+    "description": "Kyle's Claude Code plugins for workflow automation with beads/deciduous tracking",
+    "owner": {
+        "name": "Kyle Stratis",
+        "email": "kyle@stratisdatalabs.com"
+    },
+    "plugins": [
+        {
+            "name": "workflow-commands",
+            "description": "Workflow commands with beads/deciduous tracking: project-init, intake, explore, design, plan, execute, verify. Wraps ed3d-plan-and-execute with explicit decision logging. Intelligent test/lint detection. Linear integration.",
+            "version": "0.4.0",
+            "source": "./plugins/workflow-commands",
+            "author": {
+                "name": "Kyle Stratis",
+                "email": "kyle@stratisdatalabs.com"
+            },
+            "license": "MIT",
+            "keywords": [
+                "beads",
+                "deciduous",
+                "tracking",
+                "workflow",
+                "ed3d",
+                "design",
+                "planning",
+                "linear",
+                "pytest",
+                "ruff"
+            ]
+        },
+        {
+            "name": "tracking-hooks",
+            "description": "Session start and git hooks for beads/deciduous tracking integration",
+            "version": "0.1.0",
+            "source": "./plugins/tracking-hooks",
+            "author": {
+                "name": "Kyle Stratis",
+                "email": "kyle@stratisdatalabs.com"
+            },
+            "license": "MIT",
+            "keywords": [
+                "hooks",
+                "beads",
+                "deciduous",
+                "tracking"
+            ]
+        }
+    ]
+}

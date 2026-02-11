@@ -1,0 +1,22 @@
+{
+  "name": "workflow-commands",
+  "version": "0.5.0",
+  "description": "Workflow commands with beads/deciduous tracking: project-init, intake, explore, design, plan, execute, verify. Intelligent test/lint detection.",
+  "author": {
+    "name": "Kyle Stratis",
+    "email": "kyle@stratisdatalabs.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "beads",
+    "deciduous",
+    "tracking",
+    "workflow",
+    "ed3d",
+    "design",
+    "planning",
+    "linear",
+    "pytest",
+    "ruff"
+  ]
+}

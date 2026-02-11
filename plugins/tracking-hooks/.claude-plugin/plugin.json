@@ -1,0 +1,10 @@
+{
+  "name": "tracking-hooks",
+  "version": "0.1.0",
+  "description": "Session start and git hooks for beads/deciduous tracking integration",
+  "author": {
+    "name": "Kyle Stratis",
+    "email": "kyle@stratisdatalabs.com"
+  },
+  "license": "MIT"
+}
