@@ -44,8 +44,8 @@ bd comment <id> "LEARNED: ..."   # Note discoveries
 ### Deciduous
 ```bash
 deciduous init
-deciduous add goal "..." --confidence 0.8
-deciduous add decision "..." --confidence 0.8
+deciduous add goal "..." -c 80
+deciduous add decision "..." -c 80
 deciduous add action "..."
 deciduous add outcome "..."
 deciduous query
@@ -55,15 +55,37 @@ deciduous query
 
 **Good:**
 ```bash
-deciduous add decision "Chose PostgreSQL over MongoDB because: 1) ACID required, 2) team expertise, 3) JOIN performance" --confidence 0.85
+deciduous add decision "Chose PostgreSQL over MongoDB because: 1) ACID required, 2) team expertise, 3) JOIN performance" -c 85
 ```
 
 **Bad:**
 ```bash
-deciduous add decision "Using PostgreSQL" --confidence 0.8
+deciduous add decision "Using PostgreSQL" -c 80
 ```
 
-## Full Workflow
+## Commit Linking
+
+Link commits to tracking for full traceability:
+
+```bash
+# After commit, link to beads task
+bd comment <task-id> "Committed: $(git rev-parse --short HEAD)"
+
+# Or link in deciduous with commit hash
+deciduous add action "Implemented <feature>" --commit HEAD
+```
+
+## Entry Points
+
+| Start From | When to Use |
+|------------|-------------|
+| `/workflow-commands:design` | New feature needing architecture |
+| `/workflow-commands:plan` | Have design, need implementation tasks |
+| `/workflow-commands:task` | Small standalone work (<1 hour) |
+| `/workflow-commands:bug` | Fix a bug |
+| `/workflow-commands:continue` | Resume existing work |
+
+## Full Workflow (Large Features)
 
 ```
 /workflow-commands:project-init
@@ -83,4 +105,40 @@ deciduous add decision "Using PostgreSQL" --confidence 0.8
 /workflow-commands:verify --task <id>
     ↓
 git commit / PR
+```
+
+## Quick Workflow (Small Tasks)
+
+```
+/workflow-commands:task "Add logging to auth"
+    ↓
+(work directly)
+    ↓
+git commit
+    ↓
+bd close <id>
+```
+
+## Bug Fix Workflow
+
+```
+/workflow-commands:bug "Users can't login"
+    ↓
+(investigate → find root cause → fix)
+    ↓
+git commit
+    ↓
+bd close <id>
+```
+
+## Resuming Work
+
+```
+/workflow-commands:continue <task-id>
+    ↓
+(continue working)
+    ↓
+git commit
+    ↓
+bd close <id>
 ```

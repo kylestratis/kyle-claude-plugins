@@ -23,7 +23,7 @@ Wraps `ed3d-plan-and-execute:start-implementation-plan` with integrated beads/de
 bd list | grep -i "design:"
 
 # Log goal
-deciduous add goal "Plan implementation for <feature>" --confidence 0.9
+deciduous add goal "Plan implementation for <feature>" -c 90
 ```
 
 ## During Planning
@@ -53,7 +53,7 @@ bd dep add <phase2-id> <phase1-id>
 
 **Log planning decisions:**
 ```bash
-deciduous add decision "Ordered phases X→Y→Z because <rationale>" --confidence 0.85
+deciduous add decision "Ordered phases X→Y→Z because <rationale>" -c 85
 ```
 
 ## After Planning

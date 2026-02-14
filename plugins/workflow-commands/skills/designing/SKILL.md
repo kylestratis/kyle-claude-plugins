@@ -22,7 +22,7 @@ ls .beads/beads.db .deciduous/ || echo "Run /workflow-commands:project-init firs
 bd create "Design: <feature>" -t epic -p 2
 
 # Log goal
-deciduous add goal "Design <feature>" --confidence 0.8
+deciduous add goal "Design <feature>" -c 80
 ```
 
 ## During Design
@@ -37,7 +37,7 @@ Use your Skill tool to engage the `starting-a-design-plan` skill from ed3d-plan-
 **CRITICAL: Log every design decision during brainstorming (Phase 4):**
 
 ```bash
-deciduous add decision "Chose <option> over <alternatives> because <rationale>" --confidence 0.8
+deciduous add decision "Chose <option> over <alternatives> because <rationale>" -c 80
 ```
 
 Log decisions for:

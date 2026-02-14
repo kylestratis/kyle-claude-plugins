@@ -76,12 +76,13 @@ deciduous --version
 
 **Key commands:**
 ```bash
-deciduous init                                    # Initialize in project
-deciduous add goal "What I'm doing" --confidence 0.8
-deciduous add decision "Choice and why" --confidence 0.8
+deciduous init                             # Initialize in project
+deciduous add goal "What I'm doing" -c 80  # Confidence 0-100
+deciduous add decision "Choice and why" -c 80
 deciduous add action "What I did"
 deciduous add outcome "What happened"
-deciduous query                                   # View graph
+deciduous add action "Committed X" --commit HEAD  # Link to git
+deciduous query                            # View graph
 ```
 
 #### 3. ed3d-plugins (Core Workflow)
@@ -229,8 +230,8 @@ Start a design plan with decision logging. Wraps `ed3d-plan-and-execute:start-de
 
 **Decision logging examples:**
 ```bash
-deciduous add decision "Chose PostgreSQL over MongoDB because: ACID compliance required, team expertise, JOIN performance" --confidence 0.85
-deciduous add decision "Using event sourcing pattern because: audit trail required, temporal queries needed" --confidence 0.8
+deciduous add decision "Chose PostgreSQL over MongoDB because: ACID compliance required, team expertise, JOIN performance" -c 85
+deciduous add decision "Using event sourcing pattern because: audit trail required, temporal queries needed" -c 80
 ```
 
 ---
@@ -287,8 +288,8 @@ Execute an implementation plan with status updates. Wraps `ed3d-plan-and-execute
 
 **Decision logging examples:**
 ```bash
-deciduous add decision "Implemented retry with exponential backoff because upstream API is flaky" --confidence 0.8
-deciduous add decision "Resolved circular dependency by extracting shared types to common module" --confidence 0.85
+deciduous add decision "Implemented retry with exponential backoff because upstream API is flaky" -c 80
+deciduous add decision "Resolved circular dependency by extracting shared types to common module" -c 85
 ```
 
 ---
@@ -334,6 +335,94 @@ Final verification with intelligent tooling detection.
 
 ---
 
+### `/workflow-commands:task`
+
+Small standalone work that doesn't need design/planning phases.
+
+```bash
+/workflow-commands:task "<task description>" [--priority <0-4>]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `"<description>"` | Task description (quoted) |
+| `--priority` | 0=Critical, 1=High, 2=Medium, 3=Normal (default), 4=Backlog |
+
+**Use when:** Work is clear, takes <1 hour, doesn't require architectural decisions.
+
+**Examples:**
+```bash
+/workflow-commands:task "Add logging to auth middleware"
+/workflow-commands:task "Update error message for invalid email" --priority 2
+```
+
+---
+
+### `/workflow-commands:bug`
+
+Fix a bug with investigation and root cause tracking.
+
+```bash
+/workflow-commands:bug "<bug description>" [--priority <0-4>] [--blocks <task-id>]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `"<description>"` | Bug description (quoted) |
+| `--priority` | 0=Critical, 1=High, 2=Medium (default), 3=Normal, 4=Backlog |
+| `--blocks` | Link to task this bug is blocking |
+
+**Workflow:**
+1. Creates beads bug
+2. Investigate → find root cause
+3. Fix → verify
+4. Close bug
+
+**Examples:**
+```bash
+/workflow-commands:bug "Login button doesn't respond on mobile"
+/workflow-commands:bug "Users can't checkout" --priority 1
+/workflow-commands:bug "Auth crashes on empty token" --blocks beads-a1b2
+```
+
+---
+
+### `/workflow-commands:continue`
+
+Resume work on an existing beads task.
+
+```bash
+/workflow-commands:continue [<task-id>]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<task-id>` | Beads task ID (e.g., `beads-a1b2` or just `a1b2`) |
+
+**If no task ID:** Shows available tasks (`bd ready`, `bd list --status=in_progress`).
+
+**Examples:**
+```bash
+/workflow-commands:continue beads-a1b2  # Resume specific task
+/workflow-commands:continue              # Show available tasks
+```
+
+---
+
+## Entry Points
+
+| Start From | When to Use | Creates |
+|------------|-------------|---------|
+| `/workflow-commands:design` | New feature needing architecture | Epic |
+| `/workflow-commands:plan` | Have design doc, need tasks | Phase tasks |
+| `/workflow-commands:task` | Small standalone work (<1hr) | Single task |
+| `/workflow-commands:bug` | Fix a bug | Bug |
+| `/workflow-commands:continue` | Resume existing work | Nothing (uses existing) |
+| `/workflow-commands:explore` | Research before design | Research task |
+| `/workflow-commands:intake` | Import roadmap | Epics |
+
+---
+
 ## Workflow
 
 ### Full Feature Workflow
@@ -372,11 +461,28 @@ git commit / PR ─────────────────────�
 For smaller tasks that don't need full design:
 
 ```bash
-/workflow-commands:explore the bug in auth middleware
-# ... understand the issue ...
-# ... fix it directly ...
+/workflow-commands:task "Add logging to auth middleware"
+# ... work directly ...
 /workflow-commands:verify
-git commit -m "fix: auth middleware bug"
+git commit -m "feat: add auth middleware logging"
+```
+
+### Bug Fix Workflow
+
+```bash
+/workflow-commands:bug "Users can't login on mobile"
+# ... investigate root cause ...
+# ... fix it ...
+/workflow-commands:verify
+git commit -m "fix: mobile login issue"
+```
+
+### Resume Work
+
+```bash
+/workflow-commands:continue beads-a1b2   # Resume specific task
+# or
+/workflow-commands:continue              # Show available tasks
 ```
 
 ---
@@ -500,16 +606,16 @@ The workflow commands explicitly log decisions. For best results:
 - What was decided
 - What alternatives were considered
 - Why this choice was made
-- Confidence level (0.5 = tentative, 0.9 = very confident)
+- Confidence level (50 = tentative, 90 = very confident, scale 0-100)
 
 **Good example:**
 ```bash
-deciduous add decision "Chose Redis for session storage because: 1) sub-ms latency required, 2) built-in TTL for session expiry, 3) team already has Redis expertise. Considered: PostgreSQL (too slow), Memcached (no persistence)." --confidence 0.85
+deciduous add decision "Chose Redis for session storage because: 1) sub-ms latency required, 2) built-in TTL for session expiry, 3) team already has Redis expertise. Considered: PostgreSQL (too slow), Memcached (no persistence)." -c 85
 ```
 
 **Bad example:**
 ```bash
-deciduous add decision "Using Redis" --confidence 0.8
+deciduous add decision "Using Redis" -c 80
 ```
 
 ---
@@ -530,7 +636,10 @@ kyle-claude-plugins/
 │   │   │   ├── design.md
 │   │   │   ├── plan.md
 │   │   │   ├── execute.md
-│   │   │   └── verify.md
+│   │   │   ├── verify.md
+│   │   │   ├── task.md          # NEW
+│   │   │   ├── bug.md           # NEW
+│   │   │   └── continue.md      # NEW
 │   │   └── skills/
 │   │       ├── project-init/SKILL.md
 │   │       ├── intake/SKILL.md
@@ -539,6 +648,9 @@ kyle-claude-plugins/
 │   │       ├── planning/SKILL.md
 │   │       ├── executing/SKILL.md
 │   │       ├── verifying/SKILL.md
+│   │       ├── task/SKILL.md              # NEW
+│   │       ├── bug/SKILL.md               # NEW
+│   │       ├── continue/SKILL.md          # NEW
 │   │       └── beads-deciduous-integration/SKILL.md
 │   └── tracking-hooks/
 │       ├── .claude-plugin/plugin.json

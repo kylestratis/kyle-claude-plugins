@@ -24,7 +24,7 @@ bd list | grep -E "(Phase|Implement)"
 bd ready
 
 # Log goal
-deciduous add goal "Execute: <feature>" --confidence 0.9
+deciduous add goal "Execute: <feature>" -c 90
 ```
 
 ## During Execution
@@ -46,7 +46,7 @@ deciduous add action "Starting Phase <N>: <desc>"
 
 **During - log decisions as they happen:**
 ```bash
-deciduous add decision "Implemented <component> using <approach> because <rationale>" --confidence 0.8
+deciduous add decision "Implemented <component> using <approach> because <rationale>" -c 80
 ```
 
 **Discoveries (LEARNED pattern):**

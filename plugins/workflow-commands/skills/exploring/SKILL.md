@@ -21,7 +21,7 @@ Research across codebase and web with integrated tracking.
 ### Step 1: Track
 
 ```bash
-deciduous add goal "Exploring: <topic>" --confidence 0.8
+deciduous add goal "Exploring: <topic>" -c 80
 
 # Unless --no-tracking
 bd create "Research: <topic>" -t task -p 3

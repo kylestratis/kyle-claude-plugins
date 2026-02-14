@@ -27,7 +27,7 @@ ls .beads/beads.db || echo "Run /workflow-commands:project-init first"
 ### Step 2: Log Goal
 
 ```bash
-deciduous add goal "Intake features" --confidence 0.9
+deciduous add goal "Intake features" -c 90
 ```
 
 ### Step 3: Parse Features
