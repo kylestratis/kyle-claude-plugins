@@ -1,3 +1,8 @@
+---
+description: Small standalone work that doesn't need design/planning phases
+argument-hint: <task description>
+---
+
 # Task
 
 **For:** Small standalone work that doesn't need design/planning phases.

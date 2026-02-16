@@ -1,3 +1,8 @@
+---
+description: Fix a bug with investigation, root cause tracking, and verification
+argument-hint: <bug description or beads-id>
+---
+
 # Bug
 
 **For:** Fixing bugs with proper tracking.

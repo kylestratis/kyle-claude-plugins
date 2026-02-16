@@ -1,3 +1,8 @@
+---
+description: Resume work on an existing beads task with context recovery
+argument-hint: <beads-id>
+---
+
 # Continue
 
 **For:** Resuming work on an existing beads task.
