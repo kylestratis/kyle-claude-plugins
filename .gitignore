@@ -3,3 +3,6 @@
 # Design and implementation plans (generated per-project)
 docs/design-plans/
 docs/implementation-plans/
+
+# Git worktrees
+.worktrees/
