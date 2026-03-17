@@ -32,26 +32,9 @@ if re.match(r"^git\s+commit", command):
         "hookSpecificOutput": {
             "hookEventName": "PostToolUse",
             "additionalContext": (
-                "Reminder: Link this commit to tracking:\\n"
-                "- `bd comment <task-id> \"Committed: $(git rev-parse --short HEAD)\"` to link commit\\n"
-                "- `deciduous add action \"Committed: <summary>\" --commit HEAD` to log with commit hash\\n"
-                "\\n"
-                "If this completes the task:\\n"
-                "- `bd update <id> --status done && bd close <id> --reason \"<reason>\"`"
-            )
-        }
-    }
-    print(json.dumps(output))
-
-# Match git push commands
-elif re.match(r"^git\s+push", command):
-    output = {
-        "hookSpecificOutput": {
-            "hookEventName": "PostToolUse",
-            "additionalContext": (
-                "Reminder: Sync tracking data:\\n"
-                "- `bd sync` to push beads changes\\n"
-                "- `deciduous sync` to export decision graph"
+                "Reminder: If this commit completes a tracked task, consider:\\n"
+                "- `bd close <id> --reason \"<reason>\"` to close with context\\n"
+                "- `deciduous add outcome \"<summary>\"` to log the result"
             )
         }
     }
