@@ -100,6 +100,7 @@ If review finds issues:
 
 ```bash
 deciduous add outcome "Verified: <N> tests pass, lint clean, review approved"
+deciduous sync  # Export graph before commit/push
 
 # If --task provided
 bd close <task-id> --reason "Verified and ready"
