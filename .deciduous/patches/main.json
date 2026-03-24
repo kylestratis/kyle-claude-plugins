@@ -1,0 +1,197 @@
+{
+  "version": "1.0",
+  "author": null,
+  "branch": "main",
+  "created_at": "2026-03-25T00:16:34.957672+02:00",
+  "base_commit": "012a0350761fe026073b63f95fb6c5131898b4eb",
+  "nodes": [
+    {
+      "change_id": "f68406e1-ff32-4209-96e1-361b0a756409",
+      "node_type": "outcome",
+      "title": "Initialized beads and deciduous for dogfooding while developing plugins",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\"}",
+      "created_at": "2026-02-13T15:17:32.908455-05:00"
+    },
+    {
+      "change_id": "6d146941-3d40-4cf9-81eb-5b622ea6c3d2",
+      "node_type": "goal",
+      "title": "Project tracking initialized for kyle-claude-plugins",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\"}",
+      "created_at": "2026-02-13T15:17:36.764042-05:00"
+    },
+    {
+      "change_id": "f8ba7cb4-554a-4f9e-97cb-c0d7e310f681",
+      "node_type": "outcome",
+      "title": "Completed beads integration audit: found 6 issues and 4 improvement opportunities",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\"}",
+      "created_at": "2026-02-13T15:26:57.255633-05:00"
+    },
+    {
+      "change_id": "5dab0e0d-60dc-4bd4-aa40-954ca9e9fef0",
+      "node_type": "goal",
+      "title": "Design complete workflow taxonomy for beads integration",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\"}",
+      "created_at": "2026-02-13T15:34:07.732101-05:00"
+    },
+    {
+      "change_id": "86899151-f607-4a65-87fe-9391461432eb",
+      "node_type": "action",
+      "title": "Continuing workflow taxonomy design and implementation",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\"}",
+      "created_at": "2026-02-13T16:25:54.587313-05:00"
+    },
+    {
+      "change_id": "6c7ec5ce-f757-48e4-bc89-05350ee45619",
+      "node_type": "outcome",
+      "title": "Completed beads integration improvements: fixed confidence flags, added /task /bug /continue commands, updated README, enhanced commit hooks",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\"}",
+      "created_at": "2026-02-13T18:46:00.823480-05:00"
+    },
+    {
+      "change_id": "73e51d0b-2e08-44f4-aad6-aa9f5c0342dc",
+      "node_type": "goal",
+      "title": "Exploring: skill for translating feature specs from one codebase to another while adapting to target conventions",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":80}",
+      "created_at": "2026-02-15T11:42:07.010550-05:00"
+    },
+    {
+      "change_id": "ee53c6d8-6777-458a-bf2f-05d1ed833f20",
+      "node_type": "outcome",
+      "title": "Explored cross-codebase porting: 5-phase architecture (extract→analyze→design→generate→verify) using existing research agents + verifying pattern, gaps in convention inference and semantic search",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":85}",
+      "created_at": "2026-02-15T11:49:10.370183-05:00"
+    },
+    {
+      "change_id": "b8f2053c-c80b-42eb-a010-2eaef36bb683",
+      "node_type": "goal",
+      "title": "Design port-feature skill: cross-codebase feature translation with parity verification and mutation support",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":80}",
+      "created_at": "2026-02-15T12:00:25.458213-05:00"
+    },
+    {
+      "change_id": "549c86c0-31e0-4a22-9f74-822d9a05215b",
+      "node_type": "decision",
+      "title": "Clarified port-feature requirements: 2 modes (Transform/Implement), @source @target syntax, 3-level verification spectrum, deciduous+markdown mutation tracking, interactive walkthrough",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":90}",
+      "created_at": "2026-02-15T13:36:58.864291-05:00"
+    },
+    {
+      "change_id": "0123ff57-1631-4bf8-820e-12bc68c97aa5",
+      "node_type": "decision",
+      "title": "Architecture: Linear 5-phase pipeline as default, with optional --interactive flag for walkthrough-centric mode",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":85}",
+      "created_at": "2026-02-15T14:10:06.719448-05:00"
+    },
+    {
+      "change_id": "ad1060d8-fa35-4988-9864-6a3aae611ea4",
+      "node_type": "decision",
+      "title": "Verification: Adaptive recommendations based on mutation degree, user can override with --verify flag",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":85}",
+      "created_at": "2026-02-15T14:16:07.571892-05:00"
+    },
+    {
+      "change_id": "fb8dc091-9346-44e8-a0fc-c979e997e895",
+      "node_type": "observation",
+      "title": "Mutation count thresholds (low<3, medium 3-7, high>7) are initial estimates - need experimentation to calibrate. Consider: weighting mutations by impact, not just count.",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":70}",
+      "created_at": "2026-02-16T18:52:34.037304-05:00"
+    },
+    {
+      "change_id": "9340450e-2b2e-4bf0-820d-16bb5d133d14",
+      "node_type": "outcome",
+      "title": "Brainstorming complete: 5-phase pipeline with interactive mode, 3-tier verification (contract/behavioral/formal), weighted mutation tracking, deciduous+markdown format",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":90}",
+      "created_at": "2026-02-16T18:59:48.058244-05:00"
+    },
+    {
+      "change_id": "c3f6920d-a24a-42c5-ae55-366e6b296192",
+      "node_type": "outcome",
+      "title": "Design documentation complete: pollinate-code skill with 5-phase pipeline, 8 implementation phases, 3-tier verification",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":90}",
+      "created_at": "2026-02-16T19:47:13.012761-05:00"
+    },
+    {
+      "change_id": "3ba5412d-3e0c-44ea-b972-1ef5b2692d25",
+      "node_type": "goal",
+      "title": "Plan implementation for pollinate-code skill",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":90,\"prompt\":\"/workflow-commands:plan @docs/design-plans/2025-02-15-pollinate-code.md .\"}",
+      "created_at": "2026-02-16T19:48:05.536485-05:00"
+    },
+    {
+      "change_id": "cf5f4a10-6fdc-486d-8039-56add0e7184f",
+      "node_type": "goal",
+      "title": "Exploring: why deciduous database isn't automatically added to commits",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":80}",
+      "created_at": "2026-02-26T17:21:59.177485-05:00"
+    },
+    {
+      "change_id": "980f5323-3433-4e92-9abb-3d654b7c50fe",
+      "node_type": "outcome",
+      "title": "Explored deciduous auto-commit: pre-commit hook only handles beads; deciduous.db needs 3-line addition to same hook to auto-stage",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"main\",\"confidence\":95}",
+      "created_at": "2026-03-09T02:11:22.651927-04:00"
+    }
+  ],
+  "edges": [
+    {
+      "from_change_id": "73e51d0b-2e08-44f4-aad6-aa9f5c0342dc",
+      "to_change_id": "ee53c6d8-6777-458a-bf2f-05d1ed833f20",
+      "edge_type": "leads_to",
+      "rationale": "Research completed"
+    },
+    {
+      "from_change_id": "b8f2053c-c80b-42eb-a010-2eaef36bb683",
+      "to_change_id": "549c86c0-31e0-4a22-9f74-822d9a05215b",
+      "edge_type": "leads_to",
+      "rationale": "Requirements clarified"
+    },
+    {
+      "from_change_id": "549c86c0-31e0-4a22-9f74-822d9a05215b",
+      "to_change_id": "0123ff57-1631-4bf8-820e-12bc68c97aa5",
+      "edge_type": "leads_to",
+      "rationale": "Architecture decision follows clarification"
+    },
+    {
+      "from_change_id": "cf5f4a10-6fdc-486d-8039-56add0e7184f",
+      "to_change_id": "980f5323-3433-4e92-9abb-3d654b7c50fe",
+      "edge_type": "leads_to",
+      "rationale": "research resolved goal"
+    }
+  ]
+}

@@ -22,7 +22,7 @@ ls .beads/beads.db .deciduous/ || echo "Run /workflow-commands:project-init firs
 bd create "Design: <feature>" -t epic -p 2
 
 # Log goal
-deciduous add goal "Design <feature>" -c 80
+deciduous add goal "Design <feature>" -c 80  # -c takes integer 0-100, NOT float
 ```
 
 ## During Design

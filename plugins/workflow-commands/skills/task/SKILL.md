@@ -30,7 +30,7 @@ Quick workflow for small, well-defined work that doesn't need design or planning
 bd create "<task description>" -t task -p <priority>
 
 # Log deciduous goal
-deciduous add goal "Task: <task description>" -c 80
+deciduous add goal "Task: <task description>" -c 80  # -c takes integer 0-100, NOT float
 ```
 
 Note the task ID for later.

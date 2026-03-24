@@ -24,7 +24,7 @@ bd list | grep -E "(Phase|Implement)"
 bd ready
 
 # Log goal
-deciduous add goal "Execute: <feature>" -c 90
+deciduous add goal "Execute: <feature>" -c 90  # -c takes integer 0-100, NOT float
 ```
 
 ## During Execution

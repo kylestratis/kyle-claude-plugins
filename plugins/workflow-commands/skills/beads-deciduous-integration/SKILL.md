@@ -44,7 +44,7 @@ bd comment <id> "LEARNED: ..."   # Note discoveries
 ### Deciduous
 ```bash
 deciduous init
-deciduous add goal "..." -c 80
+deciduous add goal "..." -c 80          # -c takes integer 0-100, NOT float
 deciduous add decision "..." -c 80
 deciduous add action "..."
 deciduous add outcome "..."

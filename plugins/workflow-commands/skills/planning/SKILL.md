@@ -23,7 +23,7 @@ Wraps `ed3d-plan-and-execute:start-implementation-plan` with integrated beads/de
 bd list | grep -i "design:"
 
 # Log goal
-deciduous add goal "Plan implementation for <feature>" -c 90
+deciduous add goal "Plan implementation for <feature>" -c 90  # -c takes integer 0-100, NOT float
 ```
 
 ## During Planning

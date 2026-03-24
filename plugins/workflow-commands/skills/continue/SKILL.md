@@ -89,7 +89,7 @@ Continue working on the task. Use normal patterns:
 bd comment <task-id> "LEARNED: <finding>"
 
 # Decisions
-deciduous add decision "<choice> because <rationale>" -c 80
+deciduous add decision "<choice> because <rationale>" -c 80  # -c takes integer 0-100, NOT float
 
 # Progress
 bd comment <task-id> "PROGRESS: <what was done>"

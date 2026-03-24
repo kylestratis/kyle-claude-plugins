@@ -30,7 +30,7 @@ Workflow for fixing bugs with proper investigation and root cause tracking.
 bd create "Bug: <description>" -t bug -p <priority>
 
 # Log deciduous goal
-deciduous add goal "Fix: <description>" -c 70
+deciduous add goal "Fix: <description>" -c 70  # -c takes integer 0-100, NOT float
 
 # If blocking another task
 bd dep add <blocker-id> <bug-id>

@@ -1,4 +1,5 @@
-# Keep tracking data in git for team visibility
+# Deciduous database (local state, not shared)
+.deciduous/deciduous.db
 
 # Design and implementation plans (generated per-project)
 docs/design-plans/

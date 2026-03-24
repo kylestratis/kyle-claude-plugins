@@ -84,7 +84,7 @@ deciduous serve   # View live (auto-refreshes every 30s)
 deciduous sync    # Export for static hosting
 
 # Metadata flags
-# -c, --confidence 0-100   Confidence level
+# -c, --confidence INT     Confidence as integer 0-100 (NOT float — use 85, not 0.85)
 # -p, --prompt "..."       Store the user prompt (use when semantically meaningful)
 # -f, --files "a.rs,b.rs"  Associate files
 # -b, --branch <name>      Git branch (auto-detected)

@@ -38,7 +38,7 @@ Based on $ARGUMENTS:
 - `add outcome <title>` -> `deciduous add outcome "<title>" -c 90`
 
 ### Optional Flags for Nodes
-- `-c, --confidence <0-100>` - Confidence level
+- `-c, --confidence <INT 0-100>` - Confidence as integer (use 85, NOT 0.85)
 - `-p, --prompt "..."` - Store the user prompt that triggered this node
 - `-f, --files "src/main.py,lib/utils.js"` - Associate files with this node
 - `-b, --branch <name>` - Git branch (auto-detected by default)

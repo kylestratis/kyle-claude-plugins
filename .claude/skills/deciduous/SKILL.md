@@ -51,10 +51,12 @@ deciduous edges
 1. **Log BEFORE acting** - Create the action node before writing code
 2. **Link IMMEDIATELY** - Every node except root goals must have a parent
 3. **Capture verbatim prompts** - Use `-p` with the user's exact words for goals
-4. **Include confidence** - Always use `-c` flag (0-100)
+4. **Include confidence** - Always use `-c` flag with an **integer** from 0-100 (NOT a float like 0.85 — use 85 instead)
 5. **Log outcomes** - Both successes AND failures get logged
 
 ## Confidence Guidelines
+
+Use integer values only (e.g., `-c 85`, NOT `-c 0.85`):
 
 - 90-100: Certain, verified, tested
 - 75-89: High confidence, likely correct
