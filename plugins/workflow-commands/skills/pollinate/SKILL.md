@@ -217,3 +217,141 @@ deciduous add decision "Decomposed <feature> into custom chunks: <custom-names>"
 ```
 
 These logs capture the source analysis decisions for audit trail and future reference.
+
+#### Step 4: Target Convention Analysis
+
+Dispatch `ed3d-research-agents:codebase-investigator` against the current (target) project to extract conventions:
+
+```
+Your task: Analyze the target project's conventions and patterns.
+
+Input:
+- Current project path: . (current working directory)
+
+Output: Structured response with these sections:
+
+1. **Project Overview**
+   - Primary programming language(s)
+   - Runtime/framework (Node.js, Python 3.x, Java, etc.)
+   - Package manager (npm, pip, cargo, maven, etc.)
+
+2. **Naming Conventions**
+   - Variable/function naming style (snake_case, camelCase, PascalCase)
+   - File naming patterns
+   - Class/type naming patterns
+
+3. **Code Organization**
+   - Import/require patterns
+   - Module structure
+   - Folder organization
+
+4. **Error Handling**
+   - Exception/error types used
+   - Error handling patterns (try-catch, Result types, error returns, etc.)
+   - Logging approach
+
+5. **Asynchronous Patterns**
+   - async/await, promises, callbacks, or channels
+   - Concurrency primitives used
+   - Streaming vs buffering patterns
+
+6. **Testing Framework & Patterns**
+   - Test framework used (pytest, Jest, Go testing, etc.)
+   - Test file location convention
+   - Mocking approach (mocks, stubs, fixtures, etc.)
+
+7. **Configuration & Dependency Management**
+   - How external dependencies are declared (package.json, requirements.txt, Cargo.toml, etc.)
+   - Currently installed dependencies relevant to the ported feature
+   - Version pinning strategy
+
+CRITICAL INSTRUCTIONS:
+- Provide concrete examples from the actual codebase
+- List all dependencies installed in the project
+- Focus on patterns that would affect feature porting
+```
+
+**For cross-language ports:** Additionally dispatch `ed3d-research-agents:combined-researcher` to research idiomatic equivalents:
+
+```
+Your task: Research language-idiomatic patterns for cross-language feature porting.
+
+Input:
+- Source language: <SOURCE_LANGUAGE> (from Step 2)
+- Target language: <TARGET_LANGUAGE> (detected from Step 4 codebase-investigator)
+- Feature type: <FEATURE_TYPE> (e.g., async I/O, data validation, ORM usage, etc.)
+
+Output: For each source pattern identified, provide:
+
+1. **Pattern Name & Source Example**
+   - The pattern as used in <SOURCE_LANGUAGE>
+   - Concrete code snippet from the extracted feature
+
+2. **Target Language Idiomatic Equivalent**
+   - How this pattern is typically expressed in <TARGET_LANGUAGE>
+   - Current best practice (as of 2026)
+   - Trade-offs vs source approach
+
+3. **Library/Framework Recommendations**
+   - Idiomatic library/framework in target language
+   - Whether it's already installed in the target project
+   - Version requirements
+
+Examples to research:
+- Async I/O: asyncio (Python) → async/await or Tokio (Rust)?
+- Error handling: Exceptions (Python) → Result types (Rust)?
+- Data structures: dict (Python) → HashMap (Rust)?
+- Testing: pytest (Python) → Go testing or custom framework?
+
+CRITICAL INSTRUCTIONS:
+- Focus on patterns actually present in the extracted feature
+- Prioritize idiomatic approaches over literal translations
+- Include performance/maintainability implications
+```
+
+After agents return, build two comparison tables and present to user:
+
+**Convention Mapping Table:**
+
+Present this table in text format:
+
+```
+| Aspect | Source | Target | Adaptation Notes |
+|--------|--------|--------|-----------------|
+| Language | <source-lang> | <target-lang> | |
+| Naming | <source-style> | <target-style> | Use target style: <example> |
+| Error Handling | <source-error> | <target-error> | Map <source> exceptions to <target> errors |
+| Async Model | <source-async> | <target-async> | Use target async/await pattern |
+| Testing | <source-test> | <target-test> | Target uses <framework> with <mocking> |
+| ... | ... | ... | ... |
+```
+
+**Dependency Mapping Table:**
+
+Present this table in text format:
+
+```
+| Source Dependency | Version | Target Equivalent | Status | User Decision? |
+|------------------|---------|------------------|--------|---------------|
+| <source-dep> | <ver> | <target-equiv> | already-installed | No |
+| <source-dep> | <ver> | <target-equiv> | not-installed | Yes |
+| <source-dep> | <ver> | None (implement inline) | — | Yes |
+| ... | | | | |
+```
+
+Key decision markers:
+- "already-installed" → No user decision needed, use equivalent as-is
+- "not-installed" → Present as dependency swap option in Step 5
+- "None (implement inline)" → Feature can be ported inline without external dep
+
+Log deciduous decisions after building tables:
+
+```bash
+deciduous add action "Analyzed target project conventions: <N> conventions identified, <M> dependencies mapped" -c 85
+```
+
+If cross-language port: also log
+
+```bash
+deciduous add action "Researched cross-language idiom equivalents: <patterns>" -c 85
+```
