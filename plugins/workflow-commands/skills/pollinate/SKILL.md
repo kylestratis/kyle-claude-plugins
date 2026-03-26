@@ -35,8 +35,6 @@ bd create "Pollinate: Extract <feature> from <source>" -t epic -p 2
 deciduous add goal "Port <feature> from <source> to this codebase" -c 80
 ```
 
-**Announce:** "I'm analyzing the source feature for cross-codebase porting."
-
 ### During Source Acquisition
 
 #### Step 1: Parse Arguments
@@ -115,11 +113,45 @@ Input:
 - Repository URL: <REMOTE_URL>
 - Feature identifier: <FEATURE_ID>
 
-Your response must include:
-1. The path where you cloned the repository (will be needed for later verification)
-2. All sections from the local path instructions above
+Output: Structured response with these sections:
 
-CRITICAL: After cloning to a temporary location, output the clone path so we can persist it for later use.
+1. **Feature Location**
+   - File path(s)
+   - Line range (if applicable)
+   - Programming language
+
+2. **Feature Code**
+   - Complete implementation (all non-library code)
+   - Any inline documentation
+
+3. **Direct Dependencies**
+   - Imported functions/classes from same codebase
+   - Parameters and their types
+   - Return type
+
+4. **Transitive Dependency Graph**
+   - For each direct dependency, recursively trace its dependencies
+   - Stop when reaching: standard library, third-party package, or circular reference
+   - Format: Tree structure showing dependency depth
+
+5. **External Dependencies**
+   - Third-party libraries/frameworks used
+   - Version constraints (if specified)
+   - License types
+
+6. **Line Count**
+   - Total lines of feature code (including dependencies in same codebase)
+
+7. **Clone Path**
+   - The path where you cloned the repository (will be needed for later verification)
+
+CRITICAL INSTRUCTIONS:
+- Accept function name, module name, or natural language description as feature identifier
+- For natural language: search code comments, docstrings, and file structure to infer intent
+- Trace recursively until hitting standard library or third-party package boundaries
+- Report the complete transitive graph, not just direct imports
+- If the feature is not found, ask clarifying questions about its name or location
+- After cloning to a temporary location, output the clone path so we can persist it for later use.
 ```
 
 After agent returns, capture the source path:
@@ -127,6 +159,8 @@ After agent returns, capture the source path:
 - **Remote clones:** Record as `SOURCE_PATH = <clone-path>` (from agent response)
 
 **Store SOURCE_PATH in a variable for later use in design doc generation.**
+
+**Important for remote clones:** When generating the design doc in Phase 4, include in "Additional Considerations": "Source cloned to `<SOURCE_PATH>`. Do not delete until `/pollinate-verify` completes."
 
 #### Step 3: Chunk Decomposition & Deciduous Logging
 

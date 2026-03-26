@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "author": null,
+  "branch": "pollinate",
+  "created_at": "2026-03-26T20:51:09.136345+02:00",
+  "base_commit": "e747a0eb32f4e0a0cff6354e5b79c95975cb5d2f",
+  "nodes": [
+    {
+      "change_id": "a877013e-7014-4387-8f6a-d6b609c25d66",
+      "node_type": "outcome",
+      "title": "Plan created: 7 phases for pollinate skill",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"pollinate\",\"confidence\":90}",
+      "created_at": "2026-03-26T19:29:29.982129+02:00"
+    },
+    {
+      "change_id": "506579c1-6adc-4945-884f-eda4d825e938",
+      "node_type": "goal",
+      "title": "Execute: pollinate port-feature skill implementation",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"pollinate\",\"confidence\":90}",
+      "created_at": "2026-03-26T19:36:56.431805+02:00"
+    },
+    {
+      "change_id": "72170ce0-e0bc-4635-8cb1-ed97d3e4415d",
+      "node_type": "action",
+      "title": "Starting Phase 1: Skill Scaffolding",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"pollinate\",\"confidence\":85}",
+      "created_at": "2026-03-26T19:37:05.319199+02:00"
+    },
+    {
+      "change_id": "c2b4dd44-257d-482c-9920-b678f8dd57e5",
+      "node_type": "outcome",
+      "title": "Phase 1 complete: scaffolding for /pollinate and /pollinate-verify",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"pollinate\",\"confidence\":95}",
+      "created_at": "2026-03-26T20:46:45.721144+02:00"
+    },
+    {
+      "change_id": "7bb60b53-2d8c-4658-9ba8-a31cdfd0400c",
+      "node_type": "action",
+      "title": "Starting Phase 2: Source Acquisition & Feature Extraction",
+      "description": null,
+      "status": "pending",
+      "metadata_json": "{\"branch\":\"pollinate\",\"confidence\":85}",
+      "created_at": "2026-03-26T20:47:01.153548+02:00"
+    }
+  ],
+  "edges": []
+}
