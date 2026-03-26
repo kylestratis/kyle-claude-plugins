@@ -474,3 +474,256 @@ deciduous add action "User decisions captured: <N> dependency swaps, <M> archite
 ```
 
 This completes the target convention analysis and user decision phase. The decisions feed into the design document generation (Phase 4).
+
+#### Step 6: Generate Design Document
+
+Generate a design document that synthesizes all analysis into a structured plan for implementation and verification.
+
+**Design Document Location:**
+
+Create `docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md` where:
+- `YYYY-MM-DD` is today's date
+- `<feature-slug>` is a slugified version of the feature name (e.g., "gle-constraints" for "GLE Constraints")
+
+**Design Document Structure:**
+
+The design document must contain these sections in order:
+
+**1. Summary**
+
+Brief overview of what is being ported and why:
+```
+## Summary
+
+Porting <feature-name> from <source-location> to <target-project>.
+
+**Source:** <source-path-or-url>
+**Target:** This project
+**Rationale:** <why this feature is valuable>
+**Feature Description:** <what it does>
+```
+
+**2. Source Feature**
+
+Complete information from Step 2:
+```
+## Source Feature
+
+**Location:** <file-paths>
+**Language:** <source-language>
+**Lines of Code:** <N> (including transitive dependencies)
+
+**Complete Implementation:**
+
+<code blocks showing the entire feature and all non-library dependencies>
+
+**Direct Dependencies:**
+- <dependency-1>: <description and type>
+- <dependency-2>: <description and type>
+- ...
+
+**Transitive Dependency Graph:**
+
+<ASCII tree showing full dependency depth>
+
+**External Dependencies:**
+- <lib-1> (version <ver>): <purpose>
+- <lib-2> (version <ver>): <purpose>
+- ...
+```
+
+**3. Convention Mapping Table**
+
+Directly embed the convention mapping table from Step 4:
+
+```
+## Convention Mapping
+
+| Aspect | Source | Target | Adaptation Notes |
+|--------|--------|--------|-----------------|
+| Language | <source-lang> | <target-lang> | |
+| Naming | <source-style> | <target-style> | Use target style: <example> |
+| Error Handling | <source-error> | <target-error> | Map <source> exceptions to <target> errors |
+| Async Model | <source-async> | <target-async> | Use target async/await pattern |
+| Testing | <source-test> | <target-test> | Target uses <framework> with <mocking> |
+| ... | ... | ... | ... |
+```
+
+**4. Dependency Mapping Table**
+
+Directly embed the dependency mapping table from Step 4, including user decisions from Step 5:
+
+```
+## Dependency Mapping
+
+| Source Dependency | Version | Target Equivalent | Status | User Decision |
+|------------------|---------|------------------|--------|---------------|
+| <source-dep> | <ver> | <target-equiv> | already-installed | Use as-is |
+| <source-dep> | <ver> | <target-equiv> | not-installed | <decision-from-step-5> |
+| ... | | | | |
+```
+
+**5. Architectural Adaptations**
+
+Document all user decisions from Step 5 with rationale:
+
+```
+## Architectural Adaptations
+
+### Adaptation 1: <pattern-name>
+
+**Decision:** <choice-from-step-5>
+
+**Rationale:** <why-this-choice>
+
+**Implementation Plan:** <how-to-implement-the-adaptation>
+
+### Adaptation 2: ...
+```
+
+**6. Acceptance Criteria**
+
+Generate behavioral equivalence criteria based on the feature's behavior and chunk boundaries:
+
+```
+## Acceptance Criteria
+
+For **all chunks**, the ported feature must:
+- [ ] Execute identical inputs through source and target, comparing outputs
+- [ ] Produce behaviorally equivalent results (or document acceptable differences with rationale)
+- [ ] Include differential tests validating outputs match
+
+For **chunks flagged --rigor critical** (if any):
+- [ ] Execute property-based testing (100+ random test cases per property)
+- [ ] Document property invariants and their correctness proof
+- [ ] Include adversarial test cases specifically designed to stress the adaptation boundaries
+
+Examples of acceptable differences:
+- Error message text (behavior is equivalent)
+- Internal execution time (within 2x of source, if documented)
+- Memory layout (same functional output)
+```
+
+**7. Implementation Phases**
+
+Create one phase per chunk (or one phase if monolithic). For cross-language ports, include shared test vector format.
+
+```
+<!-- START_PHASE_1 -->
+### Phase 1: <chunk-name>
+
+**Chunk Description:** <what-this-chunk-does>
+
+**Source Code Reference:**
+
+<complete source code of this chunk>
+
+**Differential Test Requirements:**
+
+Write differential tests that run identical inputs through both source and target implementations, comparing outputs.
+
+For cross-language ports, use this test vector format:
+- Input specification (JSON/YAML): <example>
+- Expected output (JSON/YAML): <example>
+- Generation strategy: Extract test vectors from source tests or synthesize from behavior
+- Validation: Run vectors against both implementations, compare outputs
+
+Document acceptable differences with rationale:
+- <example>: acceptable because <rationale>
+
+**Commit Message Format:**
+
+When implementing this chunk, use:
+```
+feat(pollinate): <chunk-name>
+
+Ported from: <source-location>
+Behavioral equivalence: <summary of verification approach>
+```
+
+**Implementation Notes:**
+- <architectural-decision>
+- <dependency-swap-details>
+- <error-handling-approach>
+- <async-pattern-details>
+
+<!-- END_PHASE_1 -->
+```
+
+Repeat for each chunk.
+
+**8. Final Verification Phase**
+
+After all implementation phases, add this special phase:
+
+```
+<!-- START_PHASE_FINAL -->
+### Final Verification Phase
+
+After all implementation is complete, run this command to verify behavioral equivalence across the entire ported feature:
+
+\`\`\`bash
+/pollinate-verify --source <SOURCE_PATH> --task <beads-epic-id>
+\`\`\`
+
+The `/pollinate-verify` skill runs a three-layer verification strategy:
+1. **Layer 1: Differential Testing** — Runs all differential test vectors and compares outputs
+2. **Layer 2: Behavioral Equivalence** — Validates property-based testing for critical chunks
+3. **Layer 3: Integration Verification** — Tests the ported feature's interaction with the target codebase
+
+**Do NOT run standard `/verify`.** Use `/pollinate-verify` instead.
+
+<!-- END_PHASE_FINAL -->
+```
+
+**9. Additional Considerations**
+
+Document special notes for this port:
+
+```
+## Additional Considerations
+
+**Source Availability:**
+```
+
+For **local paths:**
+```
+Source code is at: `<SOURCE_PATH>`
+```
+
+For **remote clones:**
+```
+Source cloned to `<SOURCE_PATH>`. Do not delete until `/pollinate-verify` completes.
+```
+
+```
+
+**Cross-Language Porting Considerations** (if applicable):
+
+```
+Cross-language port from <source-lang> to <target-lang>.
+
+Bridging strategy:
+- <pattern-1>: <how-it-maps>
+- <pattern-2>: <how-it-maps>
+
+Test vector generation:
+- Extract test vectors from source test suite
+- Format as JSON/YAML for language-agnostic comparison
+- Validate against both source and target
+
+Cleanup instructions:
+After `/pollinate-verify` completes successfully:
+- <source-lang> clone at <SOURCE_PATH> can be deleted
+- <target-lang> implementation should be integrated into CI/CD
+```
+
+```
+
+**Final Steps:**
+
+Log the design doc generation:
+
+```bash
+deciduous add action "Generated design doc: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md" -c 90
+```
