@@ -355,3 +355,122 @@ If cross-language port: also log
 ```bash
 deciduous add action "Researched cross-language idiom equivalents: <patterns>" -c 85
 ```
+
+#### Step 5: User Decision Points
+
+Surface trade-off decisions to the user in three categories. Use AskUserQuestion for each decision.
+
+**1. Dependency Swaps**
+
+For each dependency in the Dependency Mapping Table where source and target differ (not already-installed), present options:
+
+**AskUserQuestion** (singleSelect):
+
+```
+Dependency Swap: <source-dep>
+
+The source feature uses <source-dep> (<source-version>).
+Target project equivalent: <target-equiv>
+
+Behavioral difference (if any):
+<desc of how target equiv differs, performance/accuracy implications>
+
+Choose one:
+- "Use target equivalent <target-equiv>" (Recommended) → Maps all source usages to target equiv
+- "Port <source-dep> inline" → Minimal adaptation of source dep logic within ported feature
+- "Skip this functionality" → Omit the <source-dep> feature entirely
+```
+
+Log each decision:
+
+```bash
+deciduous add decision "Dep swap: <source-dep> → <target-equiv> because <rationale>" -c 85
+```
+
+Or if skipped:
+
+```bash
+deciduous add decision "Dep swap: <source-dep> skipped because <rationale>" -c 85
+```
+
+**2. Architectural Adaptations**
+
+For each architectural style difference identified in Convention Mapping Table, present options:
+
+**AskUserQuestion** (singleSelect):
+
+```
+Architecture: <pattern-name>
+
+Source uses: <source-style> (e.g., global state, dependency injection, service locator)
+Target project uses: <target-style>
+
+Performance/Accuracy implications:
+- Target style: <implications>
+- Source style kept: <implications>
+- Hybrid approach: <implications>
+
+Choose one:
+- "Adapt to target style <target-style>" (Recommended) → Refactor feature to match target patterns
+- "Keep source style" → Maintain source approach, add adapter layer if needed
+- "Hybrid approach" → Selective adaptation of <components> to target style
+```
+
+Log each decision:
+
+```bash
+deciduous add decision "Architecture: adapted <pattern> to target style because <rationale>" -c 85
+```
+
+Or if kept source or hybrid:
+
+```bash
+deciduous add decision "Architecture: <pattern> kept source style because <rationale>" -c 85
+```
+
+**3. Rigor Flagging (Conditional)**
+
+Only prompt if `--rigor critical` was NOT passed globally.
+
+**AskUserQuestion** (multiSelect):
+
+```
+Rigor Flagging
+
+For larger features or complex ports, you can flag individual chunks for elevated verification
+(property-based testing, extra adversarial iterations, 10x more test cases).
+
+Chunks from this feature:
+- Chunk 1: <name> (<L> lines)
+- Chunk 2: <name> (<L> lines)
+- Chunk 3: <name> (<L> lines)
+- ... (or "All chunks") ...
+
+Flag chunks for critical rigor (select zero or more):
+- [  ] Chunk 1: <name>
+- [  ] Chunk 2: <name>
+- [  ] Chunk 3: <name>
+- [  ] All chunks
+```
+
+Log the decision:
+
+```bash
+deciduous add decision "Rigor: chunks <list> flagged critical because <rationale>" -c 80
+```
+
+If no chunks flagged:
+
+```bash
+deciduous add decision "Rigor: standard verification applied to all chunks" -c 80
+```
+
+**Summary Log After All Decisions**
+
+After all three decision categories, log a summary action:
+
+```bash
+deciduous add action "User decisions captured: <N> dependency swaps, <M> architectural adaptations, rigor flagged for <chunks>" -c 85
+```
+
+This completes the target convention analysis and user decision phase. The decisions feed into the design document generation (Phase 4).
