@@ -727,3 +727,52 @@ Log the design doc generation:
 ```bash
 deciduous add action "Generated design doc: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md" -c 90
 ```
+
+#### Step 7: Commit Design Document
+
+Commit the generated design document to the repository:
+
+```bash
+git add docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md
+git commit -m "docs: pollinate design for <feature> from <source>"
+```
+
+This captures the design document in the repository history and marks the completion of the pollination analysis phase.
+
+## After Pollination Analysis
+
+Complete the tracking lifecycle:
+
+```bash
+# Log outcome with verbatim summary
+deciduous add outcome "Pollination analysis complete: <feature> from <source> mapped to <N> phases with <M> dependencies"
+
+# Update beads epic to done
+bd update <epic-id> --status done
+
+# Add comment with design doc link
+bd comment <epic-id> "Design: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md"
+```
+
+### Handoff Instructions
+
+Pollination analysis complete! Design document committed to `docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md`.
+
+**IMPORTANT: Copy the command below BEFORE running /clear.**
+
+(1) Copy this command now:
+
+```
+/workflow-commands:plan @docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md .
+```
+
+(2) Clear context:
+
+```
+/clear
+```
+
+(3) Paste and run the copied command.
+
+After planning and execution complete, the final phase will run `/pollinate-verify --source <SOURCE_PATH> --task <epic-id>`
+instead of standard `/verify` to ensure behavioral equivalence with the source.
