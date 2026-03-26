@@ -158,22 +158,28 @@ Choose one:
 - "Custom chunks: <chunk1>, <chunk2>, ..." → specify your own
 ```
 
-3. Log decomposition decision to deciduous:
+3. **Log deciduous decisions** (final action in Step 3):
 
-```bash
-# After user chooses decomposition approach
-if [ "$(user_choice)" = "monolithic" ]; then
-  deciduous add decision "Kept <feature> as monolithic unit: <N> lines, <M> dependencies" -c 80
-else
-  deciduous add decision "Decomposed <feature> into <K> chunks: <chunk-names>" -c 80
-fi
-```
-
-4. **End of Step 3:** Log source extraction outcome to deciduous:
-
+Log the extraction result:
 ```bash
 deciduous add action "Extracted <feature> from <source>: <N> lines, <M> dependencies" -c 85
-
-# If chunks were analyzed (regardless of choice):
-# (this decision was logged above in Step 3)
 ```
+
+If feature >100 lines and chunking was performed, also log the decomposition decision:
+
+**If user chose monolithic:**
+```bash
+deciduous add decision "Kept <feature> as monolithic unit: <N> lines, <M> dependencies" -c 80
+```
+
+**If user chose suggested chunks:**
+```bash
+deciduous add decision "Decomposed <feature> into <K> chunks: <chunk-names>" -c 80
+```
+
+**If user specified custom chunks:**
+```bash
+deciduous add decision "Decomposed <feature> into custom chunks: <custom-names>" -c 80
+```
+
+These logs capture the source analysis decisions for audit trail and future reference.
