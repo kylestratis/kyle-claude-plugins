@@ -25,14 +25,24 @@ Analyze a source feature, map it to target project conventions, and generate a d
 ### Before Starting
 
 ```bash
-# Verify tracking infrastructure
-ls .beads/beads.db .deciduous/ || echo "Run /workflow-commands:project-init first"
+# Check tracking tool availability
+BEADS_AVAILABLE=false
+DECIDUOUS_AVAILABLE=false
 
-# Create epic for feature extraction
-bd create "Pollinate: Extract <feature> from <source>" -t epic -p 2
+# Check both tool installation AND project initialization
+command -v bd >/dev/null 2>&1 && ls .beads/beads.db 2>/dev/null && BEADS_AVAILABLE=true
+command -v deciduous >/dev/null 2>&1 && ls .deciduous/ 2>/dev/null && DECIDUOUS_AVAILABLE=true
 
-# Log goal with verbatim prompt
-deciduous add goal "Port <feature> from <source> to this codebase" -c 80
+# Graceful degradation note:
+# If neither tool is available: skip all tracking commands (bd, deciduous) throughout this skill.
+# The analysis and design doc generation work identically — only tracking calls are skipped.
+# If only one is available: use whichever is available, skip the other.
+
+# Create epic for feature extraction (if beads available)
+[ "$BEADS_AVAILABLE" = true ] && bd create "Pollinate: Extract <feature> from <source>" -t epic -p 2
+
+# Log goal with verbatim prompt (if deciduous available)
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add goal "Port <feature> from <source> to this codebase" -c 80
 ```
 
 ### During Source Acquisition
@@ -192,31 +202,31 @@ Choose one:
 - "Custom chunks: <chunk1>, <chunk2>, ..." → specify your own
 ```
 
-3. **Log deciduous decisions** (final action in Step 3):
+3. **Log deciduous decisions** (final action in Step 3, if deciduous available):
 
 Log the extraction result:
 ```bash
-deciduous add action "Extracted <feature> from <source>: <N> lines, <M> dependencies" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "Extracted <feature> from <source>: <N> lines, <M> dependencies" -c 85
 ```
 
 If feature >100 lines and chunking was performed, also log the decomposition decision:
 
 **If user chose monolithic:**
 ```bash
-deciduous add decision "Kept <feature> as monolithic unit: <N> lines, <M> dependencies" -c 80
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Kept <feature> as monolithic unit: <N> lines, <M> dependencies" -c 80
 ```
 
 **If user chose suggested chunks:**
 ```bash
-deciduous add decision "Decomposed <feature> into <K> chunks: <chunk-names>" -c 80
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Decomposed <feature> into <K> chunks: <chunk-names>" -c 80
 ```
 
 **If user specified custom chunks:**
 ```bash
-deciduous add decision "Decomposed <feature> into custom chunks: <custom-names>" -c 80
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Decomposed <feature> into custom chunks: <custom-names>" -c 80
 ```
 
-These logs capture the source analysis decisions for audit trail and future reference.
+These logs capture the source analysis decisions for audit trail and future reference (only when deciduous is available).
 
 #### Step 4: Target Convention Analysis
 
@@ -344,16 +354,16 @@ Key decision markers:
 - "not-installed" → Present as dependency swap option in Step 5
 - "None (implement inline)" → Feature can be ported inline without external dep
 
-Log deciduous decisions after building tables:
+Log deciduous decisions after building tables (if deciduous available):
 
 ```bash
-deciduous add action "Analyzed target project conventions: <N> conventions identified, <M> dependencies mapped" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "Analyzed target project conventions: <N> conventions identified, <M> dependencies mapped" -c 85
 ```
 
-If cross-language port: also log
+If cross-language port: also log (if deciduous available)
 
 ```bash
-deciduous add action "Researched cross-language idiom equivalents: <patterns>" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "Researched cross-language idiom equivalents: <patterns>" -c 85
 ```
 
 #### Step 5: User Decision Points
@@ -381,16 +391,16 @@ Choose one:
 - "Skip this functionality" → Omit the <source-dep> feature entirely
 ```
 
-Log each decision:
+Log each decision (if deciduous available):
 
 ```bash
-deciduous add decision "Dep swap: <source-dep> → <target-equiv> because <rationale>" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Dep swap: <source-dep> → <target-equiv> because <rationale>" -c 85
 ```
 
-Or if skipped:
+Or if skipped (if deciduous available):
 
 ```bash
-deciduous add decision "Dep swap: <source-dep> skipped because <rationale>" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Dep swap: <source-dep> skipped because <rationale>" -c 85
 ```
 
 **2. Architectural Adaptations**
@@ -416,16 +426,16 @@ Choose one:
 - "Hybrid approach" → Selective adaptation of <components> to target style
 ```
 
-Log each decision:
+Log each decision (if deciduous available):
 
 ```bash
-deciduous add decision "Architecture: adapted <pattern> to target style because <rationale>" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Architecture: adapted <pattern> to target style because <rationale>" -c 85
 ```
 
-Or if kept source or hybrid:
+Or if kept source or hybrid (if deciduous available):
 
 ```bash
-deciduous add decision "Architecture: <pattern> kept source style because <rationale>" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Architecture: <pattern> kept source style because <rationale>" -c 85
 ```
 
 **3. Rigor Flagging (Conditional)**
@@ -453,24 +463,24 @@ Flag chunks for critical rigor (select zero or more):
 - [  ] All chunks
 ```
 
-Log the decision:
+Log the decision (if deciduous available):
 
 ```bash
-deciduous add decision "Rigor: chunks <list> flagged critical because <rationale>" -c 80
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Rigor: chunks <list> flagged critical because <rationale>" -c 80
 ```
 
-If no chunks flagged:
+If no chunks flagged (if deciduous available):
 
 ```bash
-deciduous add decision "Rigor: standard verification applied to all chunks" -c 80
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add decision "Rigor: standard verification applied to all chunks" -c 80
 ```
 
 **Summary Log After All Decisions**
 
-After all three decision categories, log a summary action:
+After all three decision categories, log a summary action (if deciduous available):
 
 ```bash
-deciduous add action "User decisions captured: <N> dependency swaps, <M> architectural adaptations, rigor flagged for <chunks>" -c 85
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "User decisions captured: <N> dependency swaps, <M> architectural adaptations, rigor flagged for <chunks>" -c 85
 ```
 
 This completes the target convention analysis and user decision phase. The decisions feed into the design document generation (Phase 4).
@@ -733,10 +743,10 @@ After `/pollinate-verify` completes successfully:
 
 **Final Steps:**
 
-Log the design doc generation:
+Log the design doc generation (if deciduous available):
 
 ```bash
-deciduous add action "Generated design doc: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md" -c 90
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "Generated design doc: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md" -c 90
 ```
 
 #### Step 7: Commit Design Document
@@ -752,17 +762,17 @@ This captures the design document in the repository history and marks the comple
 
 ## After Pollination Analysis
 
-Complete the tracking lifecycle:
+Complete the tracking lifecycle (if tracking tools available):
 
 ```bash
-# Log outcome with verbatim summary
-deciduous add outcome "Pollination analysis complete: <feature> from <source> mapped to <N> phases with <M> dependencies"
+# Log outcome with verbatim summary (if deciduous available)
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add outcome "Pollination analysis complete: <feature> from <source> mapped to <N> phases with <M> dependencies"
 
-# Update beads epic to done
-bd update <epic-id> --status done
+# Update beads epic to done (if beads available)
+[ "$BEADS_AVAILABLE" = true ] && bd update <epic-id> --status done
 
-# Add comment with design doc link
-bd comment <epic-id> "Design: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md"
+# Add comment with design doc link (if beads available)
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "Design: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md"
 ```
 
 ### Handoff Instructions
