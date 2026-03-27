@@ -312,3 +312,138 @@ Next steps:
 3. Known acceptable differences documented (see section below)
 4. Proceeding to Layer 3: Standard Verify
 ```
+
+### Layer 3: Standard Verify
+
+**Goal:** Run the standard verification workflow (tests, linting, code review) on the ported implementation.
+
+Use your Skill tool to engage the `verifying` skill:
+
+```bash
+# Pass through --task flag if provided
+/workflow-commands:verifying [--task <beads-id>]
+```
+
+**Wait for the verifying skill to complete.** It will:
+1. Detect project tooling (tests, linters, formatters)
+2. Run all checks (tests, lint, formatting)
+3. Dispatch code review
+4. Report results
+
+## After Verification
+
+### Outcome Logging
+
+Log the complete verification outcome to deciduous:
+
+```bash
+deciduous add outcome "Pollinate verification complete: Layer 1 differential tests passed, Layer 2 adversarial hardening complete, Layer 3 standard verify approved"
+
+# Sync deciduous for tracking
+deciduous sync
+```
+
+### Beads Task Closure
+
+If `--task` was provided, close the beads task:
+
+```bash
+# Close task with reason
+bd close <task-id> --reason "Pollinate verification complete: behavioral equivalence verified"
+```
+
+### Three-Layer Verification Report
+
+Generate and present a comprehensive report to the user:
+
+```markdown
+## Pollinate Verification Report
+
+### Layer 1: Differential Testing
+
+| Metric | Result |
+|--------|--------|
+| Test Framework | <detected-framework> |
+| Differential Tests Run | <count> |
+| Passed | <count> |
+| Failed | <count> |
+| Status | PASS/FAIL |
+
+**Summary:**
+- All differential tests passed, confirming behavioral equivalence between source and target
+- Source outputs matched target outputs across test cases
+- Ready to proceed to Layer 2
+
+### Layer 2: Adversarial Hardening
+
+| Metric | Result |
+|--------|--------|
+| Total Iterations | <N>/3 |
+| Termination Reason | Exhaustion / Max iterations / Critical chunk minimum |
+| Total Test Cases | <count> |
+| Genuine Divergences Found | <count> |
+| Acceptable Differences Found | <count> |
+| False Positives | <count> (Z% false positive rate) |
+
+**Per-Iteration Breakdown:**
+
+| Iteration | Genuine | Acceptable | False Positives | Action |
+|-----------|---------|------------|-----------------|--------|
+| 1 | <X> | <Y> | <Z> | <action> |
+| 2 | <X> | <Y> | <Z> | <action> |
+| 3 | <X> | <Y> | <Z> | <action> |
+
+**Summary:**
+- Layer 2 identified specific divergence points between source and target
+- Critical chunks received property-based testing to validate invariants
+- All genuine divergences are documented in the Known Acceptable Differences table below
+- Exhaustion logic confirmed no further edge cases produce new findings
+
+### Layer 3: Standard Verify
+
+| Check | Result |
+|-------|--------|
+| Tests | <output from verifying skill> |
+| Lint | <output from verifying skill> |
+| Format | <output from verifying skill> |
+| Code Review | <output from verifying skill> |
+| Status | PASS/FAIL |
+
+### Known Acceptable Differences
+
+| Difference | Source Behavior | Target Behavior | Rationale | Approved By |
+|-----------|----------------|-----------------|-----------|------------|
+| <difference> | <src-behavior> | <tgt-behavior> | <rationale> | <approval> |
+| ... | | | | |
+
+**Total Differences Documented:** <count>
+
+All differences listed above have been approved and documented. No unknown divergences remain.
+
+### Verification Status
+
+✅ **PASSED** — All three layers complete and successful
+
+- Layer 1: Differential testing confirmed behavioral equivalence
+- Layer 2: Adversarial hardening found and documented all divergences
+- Layer 3: Standard verification passed all checks
+
+The ported feature is ready for merge and deployment.
+
+**Commit history:**
+- Feature implementation: <commit-hashes>
+- Differential test vectors: <commit-hashes>
+- Adversarial test cases: <commit-hashes>
+
+**Next steps:** Merge to main branch and deploy.
+```
+
+### Comprehensive Report Template
+
+The report above provides the user with complete visibility into:
+
+1. **Layer 1 results:** Exact count of differential tests and pass/fail status
+2. **Layer 2 results:** Per-iteration triage counts, termination reason, and findings summary
+3. **Layer 3 results:** Forwarded output from the verifying skill
+4. **Known Acceptable Differences table:** All documented divergences with approval
+5. **Overall verification status:** Clear PASS/FAIL signal for merge decision
