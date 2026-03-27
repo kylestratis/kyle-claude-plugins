@@ -729,8 +729,8 @@ After all implementation is complete, run this command to verify behavioral equi
 
 The `/pollinate-verify` skill runs a three-layer verification strategy:
 1. **Layer 1: Differential Testing** — Runs all differential test vectors and compares outputs
-2. **Layer 2: Behavioral Equivalence** — Validates property-based testing for critical chunks
-3. **Layer 3: Integration Verification** — Tests the ported feature's interaction with the target codebase
+2. **Layer 2: Adversarial Hardening** — Generates edge-case inputs targeting language-specific divergence points
+3. **Layer 3: Standard Verify** — Runs standard project verification (tests, linting, code review)
 
 **Do NOT run standard `/verify`.** Use `/pollinate-verify` instead.
 
