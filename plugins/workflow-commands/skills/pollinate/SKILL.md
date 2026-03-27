@@ -354,7 +354,7 @@ Key decision markers:
 - "not-installed" → Present as dependency swap option in Step 5
 - "None (implement inline)" → Feature can be ported inline without external dep
 
-Log deciduous decisions after building tables (if deciduous available):
+Log deciduous decisions and LEARNED comments after building tables (if deciduous available):
 
 ```bash
 [ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "Analyzed target project conventions: <N> conventions identified, <M> dependencies mapped" -c 85
@@ -365,6 +365,20 @@ If cross-language port: also log (if deciduous available)
 ```bash
 [ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "Researched cross-language idiom equivalents: <patterns>" -c 85
 ```
+
+**Record target analysis learnings** in beads epic (if beads available):
+
+```bash
+# For each convention discovered, add a LEARNED comment
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: Target uses <pattern> for <aspect>"
+
+# Examples:
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: Target uses camelCase for function names (vs source snake_case)"
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: Target uses async/await pattern for async operations"
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: Target uses Jest for testing with mocked external calls"
+```
+
+These comments capture the target conventions discovered, creating a reusable reference for future porting efforts.
 
 #### Step 5: User Decision Points
 
@@ -483,7 +497,31 @@ After all three decision categories, log a summary action (if deciduous availabl
 [ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add action "User decisions captured: <N> dependency swaps, <M> architectural adaptations, rigor flagged for <chunks>" -c 85
 ```
 
-This completes the target convention analysis and user decision phase. The decisions feed into the design document generation (Phase 4).
+**Record mapping decisions as LEARNED comments** in beads epic (if beads available):
+
+For each dependency swap decision:
+
+```bash
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: <source-dep> maps to <target-dep> in <target-lang> because <rationale>"
+```
+
+For each architectural adaptation decision:
+
+```bash
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: <source-pattern> adapts to <target-pattern> — <performance/accuracy tradeoff>"
+```
+
+Examples:
+
+```bash
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: requests (Python) maps to axios (JavaScript) because it's the idiomatically preferred HTTP library"
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: exception handling adapts to Promise rejection pattern — similar semantics, different syntax"
+[ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "LEARNED: dictionary iteration adapts to Object.entries — functionally equivalent with minor performance characteristics"
+```
+
+These comments capture the mapping decisions and their rationale, making the adaptation choices visible in the epic for future reference.
+
+This completes the target convention analysis and user decision phase. The decisions feed into the design document generation (Phase 6).
 
 #### Step 6: Generate Design Document
 
@@ -549,15 +587,17 @@ Directly embed the convention mapping table from Step 4:
 ```
 ## Convention Mapping
 
-| Aspect | Source | Target | Adaptation Notes |
-|--------|--------|--------|-----------------|
-| Language | <source-lang> | <target-lang> | |
-| Naming | <source-style> | <target-style> | Use target style: <example> |
-| Error Handling | <source-error> | <target-error> | Map <source> exceptions to <target> errors |
-| Async Model | <source-async> | <target-async> | Use target async/await pattern |
-| Testing | <source-test> | <target-test> | Target uses <framework> with <mocking> |
-| ... | ... | ... | ... |
+| Aspect | Source | Target | Adaptation | Rationale |
+|--------|--------|--------|-----------|-----------|
+| Language | <source-lang> | <target-lang> | | |
+| Naming | <source-style> | <target-style> | Use target style: <example> | Target codebase uniformly uses <target-style> for consistency |
+| Error Handling | <source-error> | <target-error> | Map <source> exceptions to <target> errors | Target uses <pattern> for error handling throughout; aligns with project conventions |
+| Async Model | <source-async> | <target-async> | Use target async/await pattern | <reason for async choice> |
+| Testing | <source-test> | <target-test> | Target uses <framework> with <mocking> | Aligns with existing test infrastructure and team expertise |
+| ... | ... | ... | ... | ... |
 ```
+
+**Rationale Column:** Each row must explain WHY the adaptation is made. This transforms the mapping table from a "what" document to a "what and why" document, making the port a learning experience for anyone reading the design doc.
 
 **4. Dependency Mapping Table**
 
