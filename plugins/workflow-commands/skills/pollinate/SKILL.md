@@ -606,7 +606,7 @@ Examples of acceptable differences:
 
 **7. Implementation Phases**
 
-Create one phase per chunk (or one phase if monolithic). For cross-language ports, include shared test vector format.
+Create one phase per chunk (or one phase if monolithic).
 
 ```
 <!-- START_PHASE_1 -->
@@ -622,14 +622,25 @@ Create one phase per chunk (or one phase if monolithic). For cross-language port
 
 Write differential tests that run identical inputs through both source and target implementations, comparing outputs.
 
-For cross-language ports, use this test vector format:
-- Input specification (JSON/YAML): <example>
-- Expected output (JSON/YAML): <example>
-- Generation strategy: Extract test vectors from source tests or synthesize from behavior
-- Validation: Run vectors against both implementations, compare outputs
+**For same-language ports (source and target in same language):**
+Use the direct import pattern from Appendix: Differential Testing Patterns → Same-Language Differential Testing Pattern.
+- Import both source and target implementations in test file
+- Run identical test cases through both
+- Assert outputs match (with tolerance for floats)
+- See appendix for pytest example and key points
 
-Document acceptable differences with rationale:
-- <example>: acceptable because <rationale>
+**For cross-language ports (source and target in different languages):**
+Use the test vector pattern from Appendix: Differential Testing Patterns → Cross-Language Differential Testing Pattern (Test Vectors).
+- Phase 1: Generate test vectors from source (JSON format)
+- Phase 2: Validate vectors against target
+- Use language-pair bridging strategy from appendix table
+- See appendix for Python/JavaScript example and key points
+
+**For all ports:**
+Document acceptable differences with rationale using the template from Appendix: Differential Testing Patterns → Acceptable Difference Documentation.
+- Every difference must have explicit rationale
+- Pre-populate differences approved by user during Step 5
+- Mark differences as "Approved by" only after confirmation
 
 **Commit Message Format:**
 
