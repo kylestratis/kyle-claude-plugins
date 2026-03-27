@@ -24,15 +24,25 @@ Extended verification for code ported via `/pollinate`. Wraps the standard `/ver
 ### Before Starting
 
 ```bash
-# Verify tracking infrastructure
-ls .beads/beads.db .deciduous/ || echo "Run /workflow-commands:project-init first"
+# Check tracking tool availability
+BEADS_AVAILABLE=false
+DECIDUOUS_AVAILABLE=false
 
-# Create deciduous goal
-deciduous add goal "Verify ported feature via three-layer verification" -c 85
+# Check both tool installation AND project initialization
+command -v bd >/dev/null 2>&1 && ls .beads/beads.db 2>/dev/null && BEADS_AVAILABLE=true
+command -v deciduous >/dev/null 2>&1 && ls .deciduous/ 2>/dev/null && DECIDUOUS_AVAILABLE=true
 
-# Update beads task (if --task provided)
+# Graceful degradation note:
+# If neither tool is available: skip all tracking commands (bd, deciduous) throughout this skill.
+# Verification layers (differential tests, adversarial hardening, standard verify) run unconditionally.
+# If only one is available: use whichever is available, skip the other.
+
+# Create deciduous goal (if deciduous available)
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add goal "Verify ported feature via three-layer verification" -c 85
+
+# Update beads task (if --task provided and beads available)
 if [ -n "$TASK_ID" ]; then
-  bd update "$TASK_ID" --status in-progress
+  [ "$BEADS_AVAILABLE" = true ] && bd update "$TASK_ID" --status in-progress
 fi
 ```
 
@@ -284,8 +294,8 @@ else
   proceed_to_next_iteration
 fi
 
-# Log outcome
-deciduous add outcome "Adversarial Layer 2: Iteration <N> complete: <X> genuine, <Y> acceptable, <Z> false positives"
+# Log outcome (if deciduous available)
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add outcome "Adversarial Layer 2: Iteration <N> complete: <X> genuine, <Y> acceptable, <Z> false positives"
 ```
 
 #### Final Adversarial Summary
@@ -334,22 +344,24 @@ Use your Skill tool to engage the `verifying` skill:
 
 ### Outcome Logging
 
-Log the complete verification outcome to deciduous:
+Log the complete verification outcome to deciduous (if deciduous available):
 
 ```bash
-deciduous add outcome "Pollinate verification complete: Layer 1 differential tests passed, Layer 2 adversarial hardening complete, Layer 3 standard verify approved"
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add outcome "Pollinate verification complete: Layer 1 differential tests passed, Layer 2 adversarial hardening complete, Layer 3 standard verify approved"
 
-# Sync deciduous for tracking
-deciduous sync
+# Sync deciduous for tracking (if deciduous available)
+[ "$DECIDUOUS_AVAILABLE" = true ] && deciduous sync
 ```
 
 ### Beads Task Closure
 
-If `--task` was provided, close the beads task:
+If `--task` was provided, close the beads task (if beads available):
 
 ```bash
-# Close task with reason
-bd close <task-id> --reason "Pollinate verification complete: behavioral equivalence verified"
+# Close task with reason (if beads available)
+if [ -n "$TASK_ID" ]; then
+  [ "$BEADS_AVAILABLE" = true ] && bd close <task-id> --reason "Pollinate verification complete: behavioral equivalence verified"
+fi
 ```
 
 ### Three-Layer Verification Report
