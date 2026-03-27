@@ -776,3 +776,130 @@ Pollination analysis complete! Design document committed to `docs/design-plans/Y
 
 After planning and execution complete, the final phase will run `/pollinate-verify --source <SOURCE_PATH> --task <epic-id>`
 instead of standard `/verify` to ensure behavioral equivalence with the source.
+
+---
+
+## Appendix: Differential Testing Patterns
+
+### Same-Language Differential Testing Pattern
+
+When source and target are written in the same language, the most direct verification approach is to import both implementations and run identical inputs through them.
+
+**Pattern Description:**
+
+1. Create a test file that imports both the source implementation and the target (ported) implementation
+2. Define test cases with representative inputs covering:
+   - Normal/happy path cases
+   - Edge cases (empty inputs, boundary values, etc.)
+   - Error cases (invalid inputs, exceptional conditions)
+3. Run each input through both implementations
+4. Assert that outputs match exactly (or within configured tolerance for floating-point values)
+5. Document any acceptable differences (see below)
+
+**Python pytest Example:**
+
+```python
+import sys
+import pytest
+
+# Import source implementation
+sys.path.insert(0, '<SOURCE_PATH>')
+from source_module import source_feature
+
+# Import target (ported) implementation
+from target_module import target_feature
+
+class TestDifferentialEquivalence:
+    """Test that source and target implementations produce identical outputs."""
+
+    def test_basic_case(self):
+        """Test basic happy path."""
+        input_data = {"key": "value", "count": 42}
+        source_result = source_feature(input_data)
+        target_result = target_feature(input_data)
+        assert source_result == target_result
+
+    def test_edge_case_empty_input(self):
+        """Test with empty/minimal input."""
+        source_result = source_feature({})
+        target_result = target_feature({})
+        assert source_result == target_result
+
+    def test_edge_case_large_values(self):
+        """Test with large input values."""
+        input_data = {"count": 999999999}
+        source_result = source_feature(input_data)
+        target_result = target_feature(input_data)
+        assert source_result == target_result
+
+    def test_float_tolerance(self):
+        """Test floating-point outputs with tolerance."""
+        input_data = {"value": 3.14159}
+        source_result = source_feature(input_data)
+        target_result = target_feature(input_data)
+        # Use approximate equality for floats
+        assert abs(source_result - target_result) < 1e-10
+
+    def test_error_case_invalid_input(self):
+        """Test error handling with invalid input."""
+        with pytest.raises(ValueError):
+            source_feature(None)
+        with pytest.raises(ValueError):
+            target_feature(None)
+```
+
+**Key Points:**
+
+- Import source from its original location (`SOURCE_PATH`)
+- Reuse the same test cases for both implementations
+- For floating-point comparisons, use `pytest.approx()` or manual tolerance checks
+- Organize tests by category: happy path, edge cases, error cases
+- Run with: `pytest test_differential.py -v`
+
+---
+
+### Acceptable Difference Documentation
+
+When source and target implementations diverge in behavior, document the differences explicitly with rationale. Silent acceptance of divergences is prohibited — every difference must be justified.
+
+**Template:**
+
+```markdown
+## Known Acceptable Differences
+
+| Difference | Source Behavior | Target Behavior | Rationale | Approved By |
+|-----------|----------------|-----------------|-----------|------------|
+| Float precision | 1e-15 tolerance | 1e-12 tolerance | Target uses f32 for performance; approved as sufficient for use case | User (2026-03-26) |
+| Sort stability | Stable sort (guaranteed) | Unstable sort | Rust's default sort is unstable; docs verify correctness unchanged | Architecture review |
+| Error message text | "Invalid key: 'foo'" | "Invalid key: foo" | Target omits quotes for brevity; behavior identical | User acceptance |
+| Execution time | ~100ms | ~200ms | Cross-language overhead acceptable per requirements | Performance review |
+| Memory layout | Pointer-based | Value-based | Internal structure differs; external API identical | Implementation team |
+```
+
+**Filling in the Template:**
+
+1. **Difference**: Brief name of the behavioral divergence
+2. **Source Behavior**: What the source implementation does
+3. **Target Behavior**: What the target implementation does
+4. **Rationale**: Why this difference is acceptable
+   - Language-specific limitation ("Rust doesn't have X")
+   - Performance trade-off ("Acceptable for 2x slower with 10x better memory")
+   - Architectural choice ("New design better fits target patterns")
+   - User approval ("Team approved at design review")
+5. **Approved By**: Who signed off on the difference (user name/email, review date, or "Architecture review", etc.)
+
+**Rules:**
+
+- Every difference discovered during differential testing MUST be documented here
+- Differences pre-approved by user during Step 5 decisions should be pre-populated during design doc generation
+- Before finalizing the port, review this table with the user to ensure all differences are acceptable
+- Do not merge differences without documented rationale
+- Mark differences as "Approved by" only after user confirmation or architecture review
+
+**Example Workflow:**
+
+1. **During differential testing:** Discover that target's sort function is unstable, source's is stable
+2. **Immediate action:** Add row to Known Acceptable Differences table
+3. **Document rationale:** Research why (Rust's default sort), check if it affects output correctness (doesn't)
+4. **Get approval:** Present to user, get sign-off ("Confirmed acceptable, 2026-03-26")
+5. **Finalize:** Merge with documented approval
