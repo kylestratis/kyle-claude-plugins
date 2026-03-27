@@ -858,6 +858,160 @@ class TestDifferentialEquivalence:
 
 ---
 
+### Cross-Language Differential Testing Pattern (Test Vectors)
+
+When source and target are in different languages, use language-agnostic test vectors to bridge the gap. Test vectors are input/output pairs serialized to JSON or YAML, allowing you to generate test data from the source and validate against the target.
+
+**Two-Phase Approach:**
+
+**Phase 1: Generate Test Vectors from Source**
+
+Run the source implementation with representative inputs and capture the input/output pairs:
+
+```python
+# generate_vectors.py
+import json
+import sys
+
+sys.path.insert(0, '<SOURCE_PATH>')
+from source_module import source_feature
+
+def generate_test_vectors():
+    """Generate test vectors by running source implementation."""
+    vectors = []
+
+    test_cases = [
+        {"name": "basic_case", "input": {"key": "value", "count": 42}},
+        {"name": "empty_input", "input": {}},
+        {"name": "large_values", "input": {"count": 999999999}},
+        {"name": "string_data", "input": {"text": "hello world"}},
+    ]
+
+    for case in test_cases:
+        try:
+            output = source_feature(case["input"])
+            vectors.append({
+                "name": case["name"],
+                "input": case["input"],
+                "expected_output": output,
+                "tolerance": {"float": 1e-10}
+            })
+        except Exception as e:
+            vectors.append({
+                "name": case["name"],
+                "input": case["input"],
+                "expected_error": str(e),
+                "error_type": type(e).__name__
+            })
+
+    with open("test_vectors.json", "w") as f:
+        json.dump({"test_vectors": vectors}, f, indent=2)
+
+    print(f"Generated {len(vectors)} test vectors in test_vectors.json")
+
+if __name__ == "__main__":
+    generate_test_vectors()
+```
+
+**Phase 2: Validate Against Target**
+
+Load the vectors and run them against the target implementation in the target language:
+
+```javascript
+// validate_vectors.js (Node.js example)
+const fs = require("fs");
+const targetFeature = require("./target_module").targetFeature;
+
+function validateTestVectors() {
+  const data = JSON.parse(fs.readFileSync("test_vectors.json", "utf8"));
+  const vectors = data.test_vectors;
+
+  let passed = 0;
+  let failed = 0;
+
+  for (const vector of vectors) {
+    try {
+      const result = targetFeature(vector.input);
+
+      if ("expected_output" in vector) {
+        // Compare output
+        if (JSON.stringify(result) === JSON.stringify(vector.expected_output)) {
+          console.log(`✓ ${vector.name}`);
+          passed++;
+        } else {
+          console.log(`✗ ${vector.name}: output mismatch`);
+          console.log(`  Expected: ${JSON.stringify(vector.expected_output)}`);
+          console.log(`  Got:      ${JSON.stringify(result)}`);
+          failed++;
+        }
+      }
+    } catch (e) {
+      if ("expected_error" in vector) {
+        console.log(`✓ ${vector.name} (expected error)`);
+        passed++;
+      } else {
+        console.log(`✗ ${vector.name}: unexpected error: ${e.message}`);
+        failed++;
+      }
+    }
+  }
+
+  console.log(`\nResults: ${passed} passed, ${failed} failed`);
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+validateTestVectors();
+```
+
+**Test Vector JSON Format:**
+
+```json
+{
+  "test_vectors": [
+    {
+      "name": "descriptive_case_name",
+      "input": { "key": "value", "count": 42 },
+      "expected_output": { "result": "computed_value" },
+      "tolerance": { "float": 1e-10 }
+    },
+    {
+      "name": "error_case",
+      "input": null,
+      "expected_error": "ValueError",
+      "error_type": "ValueError"
+    },
+    {
+      "name": "large_values",
+      "input": { "count": 999999999 },
+      "expected_output": { "result": "large_computed_value" },
+      "tolerance": {}
+    }
+  ]
+}
+```
+
+**Language-Pair Bridging Strategies:**
+
+| Language Pair | Strategy | Notes |
+|---------------|----------|-------|
+| Python ↔ Python | Direct import (preferred) | See Same-Language pattern above |
+| Python ↔ Rust | Test vectors (JSON) | Generate from Python, validate in Rust via serde_json |
+| Python ↔ JavaScript | Test vectors (JSON) | Generate from Python, validate in Node.js via require |
+| Python ↔ Go | Test vectors (JSON) | Generate from Python, validate via encoding/json |
+| JavaScript ↔ TypeScript | Direct import (preferred) | Same language family, direct equivalence |
+| Rust ↔ Go | Test vectors (JSON) | Serialize via serde_json and serde, deserialize via encoding/json |
+
+**Key Points:**
+
+- Generate vectors from source once, reuse across all target validations
+- Store vectors in version control for reproducibility
+- Include both happy-path and error-case vectors
+- For floating-point fields, include explicit tolerance values
+- Validate vectors match source behavior before considering them authoritative
+- Use subprocess calls to invoke target implementations if direct imports aren't available
+
+---
+
 ### Acceptable Difference Documentation
 
 When source and target implementations diverge in behavior, document the differences explicitly with rationale. Silent acceptance of divergences is prohibited — every difference must be justified.
