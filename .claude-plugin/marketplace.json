@@ -10,8 +10,8 @@
     "plugins": [
         {
             "name": "workflow-commands",
-            "description": "Workflow commands with beads/deciduous tracking: project-init, intake, explore, design, plan, execute, verify. Wraps ed3d-plan-and-execute with explicit decision logging. Intelligent test/lint detection. Linear integration.",
-            "version": "0.4.0",
+            "description": "Workflow commands with beads/deciduous tracking: project-init, intake, explore, design, plan, execute, verify, pollinate, pollinate-verify, task, bug, continue. Full workflow support from small tasks to large features, including cross-codebase feature porting.",
+            "version": "0.6.0",
             "source": "./plugins/workflow-commands",
             "author": {
                 "name": "Kyle Stratis",
@@ -27,6 +27,9 @@
                 "design",
                 "planning",
                 "linear",
+                "pollinate",
+                "porting",
+                "cross-codebase",
                 "pytest",
                 "ruff"
             ]
