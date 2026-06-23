@@ -21,7 +21,7 @@ Parse features from markdown or inline list, create beads epics, optionally sync
 ### Step 1: Verify Beads
 
 ```bash
-ls .beads/beads.db || echo "Run /workflow-commands:project-init first"
+ls -d .beads/ >/dev/null 2>&1 || echo "Run /workflow-commands:project-init first"
 ```
 
 ### Step 2: Log Goal

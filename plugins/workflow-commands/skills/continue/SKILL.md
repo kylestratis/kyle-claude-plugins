@@ -98,7 +98,6 @@ bd comment <task-id> "PROGRESS: <what was done>"
 ### Step 5: Complete (when done)
 
 ```bash
-bd update <task-id> --status done
 deciduous add outcome "Completed: <summary>"
 bd close <task-id> --reason "Complete"
 ```

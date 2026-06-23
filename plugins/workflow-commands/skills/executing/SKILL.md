@@ -56,7 +56,7 @@ bd comment <phase-id> "LEARNED: <important discovery>"
 
 **Completing:**
 ```bash
-bd update <phase-id> --status done
+bd close <phase-id> --reason "Phase <N> complete"
 deciduous add outcome "Completed Phase <N>: <summary>"
 bd ready  # Check next phase
 ```
@@ -65,7 +65,7 @@ bd ready  # Check next phase
 
 ```bash
 deciduous add outcome "Implementation complete: <summary>"
-bd update <epic-id> --status done
+bd close <epic-id> --reason "Implementation complete"
 ```
 
 **Handoff (after finishing-a-development-branch completes):**

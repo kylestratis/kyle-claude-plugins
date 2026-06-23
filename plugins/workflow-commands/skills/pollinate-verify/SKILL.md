@@ -29,7 +29,7 @@ BEADS_AVAILABLE=false
 DECIDUOUS_AVAILABLE=false
 
 # Check both tool installation AND project initialization
-command -v bd >/dev/null 2>&1 && ls .beads/beads.db 2>/dev/null && BEADS_AVAILABLE=true
+command -v bd >/dev/null 2>&1 && ls -d .beads/ >/dev/null 2>&1 && BEADS_AVAILABLE=true
 command -v deciduous >/dev/null 2>&1 && ls .deciduous/ 2>/dev/null && DECIDUOUS_AVAILABLE=true
 
 # Graceful degradation note:

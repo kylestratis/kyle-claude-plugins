@@ -54,8 +54,8 @@ bd comment <task-id> "LEARNED: <important finding>"
 When done:
 
 ```bash
-# Update status
-bd update <task-id> --status done
+# Close the task on completion
+bd close <task-id> --reason "Complete"
 
 # Log outcome
 deciduous add outcome "Completed: <summary of what was done>"

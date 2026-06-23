@@ -1,5 +1,15 @@
 # Changelog
 
+## workflow-commands 0.6.1
+
+Migrate workflow skills to the bd 1.0 CLI.
+
+**Fixed:**
+- Tracking detection now checks the `.beads/` directory instead of the removed `.beads/beads.db` SQLite file (bd 1.0 uses an embedded Dolt backend)
+- Task completion uses `bd close` instead of `bd update --status done` (the `done` status was removed; valid statuses: open/in_progress/blocked/deferred/closed)
+- Replaced the nonexistent `deciduous query` with `deciduous nodes`
+- Affects skills: project-init, intake, designing, executing, bug, task, continue, beads-deciduous-integration, pollinate, pollinate-verify
+
 ## workflow-commands 0.6.0
 
 Cross-codebase feature porting via `/pollinate` and `/pollinate-verify`.
