@@ -21,8 +21,8 @@ Initialize beads (task tracking) and deciduous (decision journaling) in a projec
 ### Step 1: Check Current State
 
 ```bash
-ls .beads/beads.db 2>/dev/null && echo "beads: exists"
-ls .deciduous/ 2>/dev/null && echo "deciduous: exists"
+ls -d .beads/ 2>/dev/null && echo "beads: exists"
+ls -d .deciduous/ 2>/dev/null && echo "deciduous: exists"
 ls CLAUDE.md 2>/dev/null && echo "CLAUDE.md: exists"
 ```
 

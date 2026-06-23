@@ -89,8 +89,8 @@ bd comment <bug-id> "VERIFIED: <how you verified>"
 ### Step 5: Complete
 
 ```bash
-# Update status
-bd update <bug-id> --status done
+# Close the bug on completion
+bd close <bug-id> --reason "Fixed"
 
 # Log outcome
 deciduous add outcome "Fixed: <summary of fix>"

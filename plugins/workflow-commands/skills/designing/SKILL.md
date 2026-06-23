@@ -16,7 +16,7 @@ Wraps `ed3d-plan-and-execute:start-design-plan` with integrated beads/deciduous 
 
 ```bash
 # Verify tracking
-ls .beads/beads.db .deciduous/ || echo "Run /workflow-commands:project-init first"
+ls -d .beads/ .deciduous/ >/dev/null 2>&1 || echo "Run /workflow-commands:project-init first"
 
 # Create epic
 bd create "Design: <feature>" -t epic -p 2
@@ -53,7 +53,7 @@ Log decisions for:
 
 ```bash
 deciduous add outcome "Design complete: <summary>"
-bd update <epic-id> --status done
+bd close <epic-id> --reason "Design complete"
 bd comment <epic-id> "Design: <path>"
 ```
 

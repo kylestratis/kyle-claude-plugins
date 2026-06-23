@@ -35,7 +35,7 @@ user-invocable: true
 bd init                          # Initialize
 bd create "Task" -t task -p 3    # Create
 bd list / bd ready               # View
-bd update <id> --status done     # Update
+bd update <id> --status in_progress  # Update status (no "done"; close to complete)
 bd close <id> --reason "Done"    # Close
 bd dep add <child> <parent>      # Dependency
 bd comment <id> "LEARNED: ..."   # Note discoveries
@@ -48,7 +48,7 @@ deciduous add goal "..." -c 80          # -c takes integer 0-100, NOT float
 deciduous add decision "..." -c 80
 deciduous add action "..."
 deciduous add outcome "..."
-deciduous query
+deciduous nodes                         # View graph (also: edges, graph)
 ```
 
 ## Decision Quality
