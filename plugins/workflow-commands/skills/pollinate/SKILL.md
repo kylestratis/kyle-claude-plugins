@@ -30,7 +30,7 @@ BEADS_AVAILABLE=false
 DECIDUOUS_AVAILABLE=false
 
 # Check both tool installation AND project initialization
-command -v bd >/dev/null 2>&1 && ls .beads/beads.db 2>/dev/null && BEADS_AVAILABLE=true
+command -v bd >/dev/null 2>&1 && ls -d .beads/ >/dev/null 2>&1 && BEADS_AVAILABLE=true
 command -v deciduous >/dev/null 2>&1 && ls .deciduous/ 2>/dev/null && DECIDUOUS_AVAILABLE=true
 
 # Graceful degradation note:
@@ -808,8 +808,8 @@ Complete the tracking lifecycle (if tracking tools available):
 # Log outcome with verbatim summary (if deciduous available)
 [ "$DECIDUOUS_AVAILABLE" = true ] && deciduous add outcome "Pollination analysis complete: <feature> from <source> mapped to <N> phases with <M> dependencies"
 
-# Update beads epic to done (if beads available)
-[ "$BEADS_AVAILABLE" = true ] && bd update <epic-id> --status done
+# Close beads epic on completion (if beads available)
+[ "$BEADS_AVAILABLE" = true ] && bd close <epic-id> --reason "Pollination analysis complete"
 
 # Add comment with design doc link (if beads available)
 [ "$BEADS_AVAILABLE" = true ] && bd comment <epic-id> "Design: docs/design-plans/YYYY-MM-DD-pollinate-<feature-slug>.md"
