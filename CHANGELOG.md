@@ -1,5 +1,14 @@
 # Changelog
 
+## tracking-hooks 0.3.1
+
+Fix bd 1.0 CLI breakage in tracking hooks.
+
+**Fixed:**
+- Detection now checks the `.beads/` directory instead of the removed `.beads/beads.db` SQLite file (was causing false "tracking not initialized" warnings on every workflow skill under the embedded Dolt backend). Affects: workflow-tracking-check.py, session-start-tracking.sh, pre-commit-sync.sh, git-beads-reminder.py
+- `pre-commit-sync.sh` uses `bd export` instead of the removed `bd sync --flush-only`
+- Reconciled marketplace.json version (was stale at 0.1.0) with plugin.json (0.3.0 → 0.3.1)
+
 ## workflow-commands 0.6.1
 
 Migrate workflow skills to the bd 1.0 CLI.

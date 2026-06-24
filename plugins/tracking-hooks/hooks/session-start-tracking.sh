@@ -8,7 +8,7 @@ DECIDUOUS_INITIALIZED=false
 CONTEXT=""
 
 # Check for beads
-if [ -f ".beads/beads.db" ]; then
+if [ -d ".beads" ]; then
   BEADS_INITIALIZED=true
   # Get count of open tasks
   if command -v bd &> /dev/null; then

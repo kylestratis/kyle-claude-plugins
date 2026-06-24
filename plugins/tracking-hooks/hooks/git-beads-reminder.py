@@ -22,8 +22,8 @@ tool_input = input_data.get("tool_input", {})
 command = tool_input.get("command", "")
 
 # Check if beads is initialized in this project
-beads_db = os.path.join(os.getcwd(), ".beads", "beads.db")
-if not os.path.exists(beads_db):
+beads_dir = os.path.join(os.getcwd(), ".beads")
+if not os.path.isdir(beads_dir):
     sys.exit(0)
 
 # Match git commit commands

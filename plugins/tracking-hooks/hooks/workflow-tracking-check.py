@@ -45,12 +45,12 @@ if not is_workflow_skill:
     sys.exit(0)
 
 # Check for beads and deciduous initialization
-beads_exists = os.path.exists(os.path.join(os.getcwd(), ".beads", "beads.db"))
+beads_exists = os.path.isdir(os.path.join(os.getcwd(), ".beads"))
 deciduous_exists = os.path.exists(os.path.join(os.getcwd(), ".deciduous"))
 
 missing = []
 if not beads_exists:
-    missing.append("beads (.beads/beads.db)")
+    missing.append("beads (.beads/)")
 if not deciduous_exists:
     missing.append("deciduous (.deciduous/)")
 

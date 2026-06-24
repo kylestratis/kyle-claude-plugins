@@ -20,8 +20,8 @@ if ! echo "$COMMAND" | grep -qE '^git\s+commit'; then
 fi
 
 # Flush beads JSONL if beads is initialized
-if [ -f ".beads/beads.db" ]; then
-    bd sync --flush-only 2>/dev/null || true
+if [ -d ".beads" ]; then
+    bd export 2>/dev/null || true
     git add .beads/issues.jsonl .beads/interactions.jsonl .beads/metadata.json 2>/dev/null || true
 fi
 
