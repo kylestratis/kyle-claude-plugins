@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "hash": "8a0b3fc304d2ae76cb0a1952c8b682cad8366334",
+    "short_hash": "8a0b3fc",
+    "author": "Kyle Stratis",
+    "date": "2026-03-26T00:27:59+02:00",
+    "message": "docs: add code pollination skill design plan\n\nDesign for /pollinate and /pollinate-verify skills in workflow-commands.\nKey architectural decisions:\n- Analysis-first design doc generator feeding into existing /plan -> /execute pipeline\n- Three-layer verification: differential testing, adversarial hardening, standard verify\n- Adaptive rigor with exhaustion-based termination (inspired by Tesseract-Vault VDD)\n- 7 implementation phases\n\nCo-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+    "files_changed": 2
+  }
+]

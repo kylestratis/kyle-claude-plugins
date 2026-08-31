@@ -107,6 +107,17 @@ If using `--linear` flag with `/workflow-commands:intake`:
 - Must have Linear MCP connector enabled in Claude
 - Requires access to at least one Linear team
 
+#### GitHub Codex Review
+
+The `/workflow-commands:fix-pr-review` command requires:
+
+- GitHub CLI authenticated through `gh auth login`
+- An open GitHub pull request
+- Codex code review enabled for the repository
+
+The workflow uses GitHub CLI authentication and never reads or prints token
+values.
+
 #### Pre-commit
 
 For automatic verification hooks:
@@ -334,6 +345,30 @@ Final verification with intelligent tooling detection.
 6. Closes beads task (if `--task` provided)
 
 ---
+### `/workflow-commands:fix-pr-review`
+
+Process Codex Review findings on an open GitHub pull request.
+
+```bash
+# Current branch's PR
+/workflow-commands:fix-pr-review
+
+# Explicit PR
+/workflow-commands:fix-pr-review 123
+/workflow-commands:fix-pr-review https://github.com/owner/repo/pull/123
+```
+
+The workflow waits for Codex Review, evaluates each finding against the current
+code, fixes legitimate issues, and replies with technical evidence when a
+finding is invalid. After fixes are pushed, it requests another Codex review
+and repeats until the current PR head has no actionable findings.
+
+`/verify` remains the pre-PR local verification workflow.
+`/fix-pr-review` operates on asynchronous Codex findings posted through the
+GitHub PR interface.
+
+---
+
 
 ### `/workflow-commands:task`
 
@@ -637,6 +672,7 @@ kyle-claude-plugins/
 │   │   │   ├── plan.md
 │   │   │   ├── execute.md
 │   │   │   ├── verify.md
+│   │   │   ├── fix-pr-review.md
 │   │   │   ├── task.md          # NEW
 │   │   │   ├── bug.md           # NEW
 │   │   │   └── continue.md      # NEW
@@ -648,6 +684,7 @@ kyle-claude-plugins/
 │   │       ├── planning/SKILL.md
 │   │       ├── executing/SKILL.md
 │   │       ├── verifying/SKILL.md
+│   │       ├── pr-review-loop/SKILL.md
 │   │       ├── task/SKILL.md              # NEW
 │   │       ├── bug/SKILL.md               # NEW
 │   │       ├── continue/SKILL.md          # NEW

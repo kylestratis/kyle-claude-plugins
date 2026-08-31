@@ -34,7 +34,7 @@ Invoke ed3d skill:
 Use your Skill tool to engage the `executing-an-implementation-plan` skill from ed3d-plan-and-execute.
 ```
 
-**CRITICAL OVERRIDE:** The ed3d skill will activate `finishing-a-development-branch` at the end. Follow that skill's merge/PR/keep/discard flow, but after completion, use the wrapper verify command from "After All Phases" below instead of stopping.
+**After ed3d completes:** Run local verification with `/workflow-commands:verify --task <epic-id>` to confirm all phase implementations meet requirements. Only if verification passes, proceed to the next step.
 
 **For EACH phase:**
 
@@ -68,13 +68,12 @@ deciduous add outcome "Implementation complete: <summary>"
 bd close <epic-id> --reason "Implementation complete"
 ```
 
-**Handoff (after finishing-a-development-branch completes):**
+**After `finishing-a-development-branch` returns:**
 
-Tell the user:
-```
-Ready for verification. Run:
+If it created a GitHub pull request, immediately use the Skill tool to engage
+`pr-review-loop` for that PR. Wait for Codex Review, fix legitimate findings,
+reply with evidence to invalid findings, and continue until the skill's clean
+exit conditions are met. Do not stop at PR creation.
 
-/workflow-commands:verify --task <epic-id>
-```
-
-Note: Unlike planning→execute, no `/clear` is needed here because the execution phase already ran with fresh context.
+If no pull request was created, skip `pr-review-loop`. The implementation is
+complete.

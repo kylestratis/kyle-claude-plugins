@@ -1,7 +1,7 @@
 {
   "name": "workflow-commands",
-  "version": "0.6.1",
-  "description": "Workflow commands with beads/deciduous tracking: project-init, intake, explore, design, plan, execute, verify, pollinate, pollinate-verify, task, bug, continue. Full workflow support from small tasks to large features, including cross-codebase feature porting.",
+  "version": "0.7.0",
+  "description": "Workflow commands with beads/deciduous tracking: project-init, intake, explore, design, plan, execute, verify, fix-pr-review, pollinate, pollinate-verify, task, bug, continue. Includes an automated GitHub Codex Review remediation loop.",
   "author": {
     "name": "Kyle Stratis",
     "email": "kyle@stratisdatalabs.com"

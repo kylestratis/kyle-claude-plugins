@@ -1,5 +1,15 @@
 # Changelog
 
+## workflow-commands 0.7.0
+
+Add automated remediation for GitHub Codex Review findings.
+
+**New:**
+- Added `/fix-pr-review` and the `pr-review-loop` skill for automatic and on-demand processing of Codex findings on open pull requests
+- The loop evaluates each finding against the current code, fixes legitimate issues, and replies with evidence when a finding is invalid
+- Fix cycles push changes, explicitly request fresh Codex review, and stop only when the current PR head has no actionable findings
+- The execution workflow now enters the PR review loop after creating a GitHub pull request
+
 ## tracking-hooks 0.3.1
 
 Fix bd 1.0 CLI breakage in tracking hooks.
