@@ -1,1 +1,2 @@
 {"id":"int-ecc4a9d2","kind":"field_change","created_at":"2026-08-31T22:01:09.069555Z","actor":"Kyle Stratis","issue_id":"kyle-claude-plugins-q39","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"Implemented and verified"}}
+{"id":"int-8b97b5fe","kind":"field_change","created_at":"2026-08-31T22:27:38.836362Z","actor":"Kyle Stratis","issue_id":"kyle-claude-plugins-o9u","extra":{"field":"status","new_value":"closed","old_value":"open","reason":"Research complete"}}
