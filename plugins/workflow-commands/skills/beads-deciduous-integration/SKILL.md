@@ -42,6 +42,8 @@ Repository directives may add exact paths. They never broaden the allowlist to a
 
 `orchestrating-beads-tickets` consumes this exact effective allowlist for source-content exclusions and reconciliation path proof.
 
+Only these exported paths cross worktrees. The local Beads and Deciduous databases are untracked per-worktree state, so a workflow that spans multiple worktrees must mutate tracker state in one owning worktree and move the resulting allowlisted exports into any other worktree that commits them.
+
 ## Quick Reference
 
 ### Beads

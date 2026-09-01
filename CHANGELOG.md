@@ -18,7 +18,7 @@ Coordinate independent Beads tickets with isolated workers, serial integration, 
 - Removes coordinator-selected provider routes, explicit overrides, attempted-provider sets, and one-try promises
 - Binds verification to source content excluding repository-declared tracker and generated decision-graph paths
 - Presents local merge, pull request, and keep-as-is directly; accepted worker work cannot be discarded
-- Makes tracker comments, closures, and outcomes final only after a local reconciliation commit passes its pre-push path check and the push succeeds
+- Makes tracker comments, closures, and outcomes final only after the exact tracker-only reconciliation commit passes its path check and reaches the target branch
 
 ## workflow-commands 0.7.0
 

@@ -61,9 +61,11 @@ Deadline, sunk-cost, or authority pressure does not weaken these invariants. Red
 3. Record the current target branch and preserve unrelated changes.
 4. Refresh the target branch. Resolve and record its exact `target-sha`.
 5. Generate a new unique run ID for every invocation. Set the run actor to `orchestrate:<run-id>`. Never recover a run ID or adopt branch, worktree, assignee, or metadata from an earlier run.
-6. Log a Deciduous action with the run ID, target branch, `target-sha`, and candidate ticket IDs. Do not include infrastructure configuration or credentials.
+6. Use `using-git-worktrees` to create the dedicated integration branch and worktree at exactly `target-sha`, before any tracker mutation. Confirm that the integration worktree owns that branch and has `target-sha` as its `HEAD`.
+7. Declare that integration worktree the sole owner of this run's Beads and Deciduous state. Every claim, comment, closure, parent mutation, action, decision, coupling, failure, outcome, correction, and sync executes there, because the local tracker databases are untracked per-worktree state that no other worktree inherits. Worker and reconciliation worktrees never mutate tracker state; they receive only allowlisted tracked exports.
+8. From the integration worktree, log a Deciduous action with the run ID, target branch, `target-sha`, and candidate ticket IDs. Do not include infrastructure configuration or credentials.
 
-The integration branch always uses a dedicated integration worktree. Preserve unrelated changes in every existing worktree.
+Preserve unrelated changes in every existing worktree. Preserve the integration worktree and its tracker state until reconciliation becomes final or every claimed ticket has been released.
 
 ### 2. Build one runnable wave
 
@@ -101,7 +103,7 @@ After selecting the wave and before creating worktrees:
 
    A nonzero claim means another actor owns the ticket. Exclude that ticket from the wave and do not overwrite its assignee or metadata.
 3. Re-run `bd show <ticket-id> --json` after each successful claim. Require `in_progress` status, assignee `orchestrate:<run-id>`, and exact ownership metadata. Apply the post-claim exit contract when any check fails.
-4. Log one Deciduous decision with the selected wave, every exclusion and reason, and the ownership partition.
+4. From the integration worktree, log one Deciduous decision with the selected wave, every exclusion and reason, and the ownership partition.
 
 #### Post-claim exit contract
 
@@ -171,7 +173,7 @@ Define in the task batch's shared context:
 - commit and result format; and
 - the rule that workers skip project-wide tests, linters, formatters, builds, and tracker mutation.
 
-Before creating any worker branch, use `using-git-worktrees` to create a dedicated integration branch and worktree at exactly `target-sha`. Confirm that the integration worktree owns that branch and has `target-sha` as its `HEAD`.
+Before creating any worker branch, confirm that the integration worktree created in Section 1 still owns the integration branch at exactly `target-sha`.
 
 Create every worker branch and worktree from the same recorded `target-sha`, not from the coordinator's current `HEAD` or another worker branch. Name them from stable ticket IDs. A setup failure after claim uses the post-claim exit contract. If integration setup fails, release every claimed ticket that has no useful state.
 
@@ -267,15 +269,16 @@ After the verified source reaches the target branch:
 3. Before any provisional tracker or Deciduous mutation, fetch the target branch and fast-forward or otherwise update the existing target-owning worktree until its `HEAD` equals the resolved published target SHA. Never switch the target branch into another worktree. Stop before mutation if the target-owning worktree cannot reach that exact revision.
 4. Select the repository-compatible reconciliation route before mutation. Push directly to the target only when repository directives permit it, using the target-owning worktree. Otherwise create a dedicated reconciliation branch and worktree at exactly the published target SHA and publish it through a dedicated reconciliation PR.
 5. Initialize the pre-reconciliation snapshot with every represented ticket's mutable state and ownership and every affected parent's mutable state. As provisional artifacts are created, add every provisional comment ID, each parent mutation with its before and after state, and every Deciduous node ID to that same snapshot before continuing.
-6. From the worktree that owns the selected reconciliation branch, add the commit or PR and verification evidence to each represented ticket, close represented tickets, reconcile eligible parents last, and log the final Deciduous outcome. Leave failed, blocked, deferred, or omitted tickets in their recorded state. Every comment, closure, parent mutation, and outcome remains provisional.
-7. Create the actual reconciliation commit in that worktree according to repository directives. It must contain the allowlisted provisional changes, including mutations carried from Section 7.
-8. Before publication, diff the actual reconciliation commit from the published target SHA. Require every changed path to match the exact effective tracked export allowlist resolved in Section 1.
-9. Publish that exact reconciliation commit through the selected route. A direct route pushes it to the target branch. A PR route pushes only the dedicated reconciliation branch and merges that commit through the dedicated PR. Never force-push over another contributor's work.
-10. Finality requires both proofs: the actual reconciliation commit passed the tracker-only path proof in step 8, and a fresh fetch proves that the target branch contains that exact commit. Fast-forward or update the target-owning worktree to the resolved final target `HEAD`. Until then, preserve ownership and every recovery record and report the reconciliation as provisional.
-11. If reconciliation is rejected, restore every mutable ticket and parent state and ownership from the pre-reconciliation snapshot. Append-only comments and outcomes are corrected rather than deleted: before repeating reconciliation, add an explicit correction or supersession record that names each rejected comment ID or Deciduous outcome/node ID and states that the rejected artifact is not completion evidence. Rejection includes a failed path proof, an abandoned reconciliation commit, a rejected or closed reconciliation PR, or a target update that requires a replacement commit.
-12. A transport failure leaves reconciliation pending rather than rejected. Preserve the provisional state and recovery record, report the publication error, and do not repeat reconciliation while that commit can still reach the target.
-13. Do not compare or claim whole-tree identity between `verified-code-sha` and the reconciliation commit. The path-bound diff of the actual reconciliation commit and its presence on the target are the reconciliation proof.
-14. Only after reconciliation becomes final, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
+6. From the integration worktree, add the commit or PR and verification evidence to each represented ticket and close represented tickets. Reconcile parents last: before mutating a parent, re-read its complete required-child set, and close it only when every required child is already closed or was represented and provisionally closed successfully in this reconciliation. Leave the parent unchanged when any required child is open, failed, blocked, deferred, or omitted. Leave failed, blocked, deferred, or omitted tickets in their recorded state. Log the final Deciduous outcome in the same worktree and sync it. Every comment, closure, parent mutation, and outcome remains provisional.
+7. Copy only the resulting allowlisted tracked exports from the integration worktree into the worktree that owns the selected reconciliation branch. Never create Beads or Deciduous records from that worktree's own local database.
+8. Create the actual reconciliation commit in the reconciliation worktree according to repository directives. It must contain the transferred allowlisted exports, including mutations carried from Section 7.
+9. Before publication, diff the actual reconciliation commit from the published target SHA. Require every changed path to match the exact effective tracked export allowlist resolved in Section 1.
+10. Publish that exact reconciliation commit through the selected route. A direct route pushes it to the target branch. A PR route pushes only the dedicated reconciliation branch and merges that commit through the dedicated PR. Never force-push over another contributor's work.
+11. Finality requires both proofs: the actual reconciliation commit passed the tracker-only path proof in step 9, and a fresh fetch proves that the target branch contains that exact commit. Fast-forward or update the target-owning worktree to the resolved final target `HEAD`. Until then, preserve ownership and every recovery record and report the reconciliation as provisional.
+12. If reconciliation is rejected, restore every mutable ticket and parent state and ownership from the pre-reconciliation snapshot, in the integration worktree. Append-only comments and outcomes are corrected rather than deleted: before repeating reconciliation, add an explicit correction or supersession record that names each rejected comment ID or Deciduous outcome/node ID and states that the rejected artifact is not completion evidence. Rejection includes a failed path proof, an abandoned reconciliation commit, a rejected or closed reconciliation PR, or a target update that requires a replacement commit.
+13. A transport failure leaves reconciliation pending rather than rejected. Preserve the provisional state and recovery record, report the publication error, and do not repeat reconciliation while that commit can still reach the target.
+14. Do not compare or claim whole-tree identity between `verified-code-sha` and the reconciliation commit. The path-bound diff of the actual reconciliation commit and its presence on the target are the reconciliation proof.
+15. Only after reconciliation becomes final, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
 
 ## Completion Report
 
