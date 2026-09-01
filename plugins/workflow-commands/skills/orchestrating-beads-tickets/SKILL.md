@@ -10,6 +10,8 @@ user-invocable: false
 
 Run independent tickets concurrently, then integrate their work serially. The coordinator owns selection, isolation, fan-in, verification, and tracker reconciliation. The task runtime owns provider fallback. Each worker owns one ticket.
 
+Beads and Linear have fixed, non-interchangeable roles. Beads is the execution tracker that agents read and write: it holds claims, dependency order, ownership, and completion evidence. Linear is the human progress view. Never make Linear authoritative for execution state, never gate a run on a Linear write, and never treat a Linear state as evidence.
+
 **Announce:** "I'm orchestrating independent Beads tickets in isolated worktrees."
 
 ## Arguments
