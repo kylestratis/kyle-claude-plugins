@@ -550,7 +550,7 @@ Coordinate independent open leaf Beads tickets in isolated worktrees.
 | `<ticket-id>` | Restrict the candidate set to specific open leaf Beads tickets |
 | `--max-parallel <count>` | Optional exact two-token positive worker limit; use it at most once; defaults to 4 and is capped at the runtime limit |
 
-Without ticket IDs, the workflow starts from `bd ready`. Each invocation creates a new run and rejects in-progress or blocked tickets. Use `/workflow-commands:continue <ticket-id>` to recover those tickets. The workflow creates its integration branch and all worker branches from one target revision, integrates worker commits serially, and closes tickets only after it verifies the published source revision and reconciles tracker-only changes.
+Without ticket IDs, the workflow starts from `bd ready`. Each invocation creates a new run and rejects in-progress, blocked, or stale-owned tickets; useful state stays on its exact branch and worktree for explicit manual recovery, while an interrupted empty claim requires administrative release. The task runtime owns its configured automatic provider fallback chain. The workflow creates its integration branch and all worker branches from one target revision, integrates worker commits serially, and verifies source content while excluding repository-declared tracker and generated decision-graph paths. It offers a local merge, a pull request, or keep-as-is; accepted worker work cannot be discarded. Ticket comments, closures, and outcomes become final only after a local reconciliation commit passes the tracker-path-only check and its push succeeds.
 
 ---
 
@@ -670,7 +670,7 @@ For existing ready tickets with disjoint ownership:
 # isolated workers → serial integration → combined verification → publish → close
 ```
 
-Dependent, overlapping, failed, or unverified tickets remain open for a later wave.
+Dependent or overlapping open tickets can remain for a later wave. Failed or unverified useful state remains on its recorded branch and worktree for explicit manual recovery and is never adopted by a later orchestration run.
 
 ### Quick Task Workflow
 

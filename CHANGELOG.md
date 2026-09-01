@@ -7,16 +7,18 @@ Coordinate independent Beads tickets with isolated workers, serial integration, 
 **New:**
 - Added `/workflow-commands:orchestrate` and the `orchestrating-beads-tickets` skill
 - Selects ready tickets with non-overlapping write sets, gives each active ticket one worktree, and preserves hard dependency order
-- Retries provider infrastructure failures through configured alternate providers without treating them as ticket failures
+- Delegates provider infrastructure fallback exclusively to the task runtime's configured automatic chain and handles only the settled task result
 - Verifies the combined revision before publishing changes or closing represented tickets
 
 **Fixed:**
-- Starts each orchestration with a new run ID and sends in-progress or blocked ticket recovery to `/workflow-commands:continue`
+- Starts each orchestration with a new run ID, rejects earlier ownership, preserves useful state for explicit manual recovery, and reports the administrative release procedure for stale empty claims
 - Creates the integration branch and every worker branch from one recorded target revision
-- Defines release and recovery state for every post-claim exit
+- Defines release and manual recovery state for every post-claim exit
 - Accepts one exact `--max-parallel <positive-integer>` option before tracker mutation
-- Bounds each provider alternate to one try per worker attempt and restores temporary overrides
-- Verifies that post-reconciliation changes contain only repository-declared tracker or decision-graph paths
+- Removes coordinator-selected provider routes, explicit overrides, attempted-provider sets, and one-try promises
+- Binds verification to source content excluding repository-declared tracker and generated decision-graph paths
+- Presents local merge, pull request, and keep-as-is directly; accepted worker work cannot be discarded
+- Makes tracker comments, closures, and outcomes final only after a local reconciliation commit passes its pre-push path check and the push succeeds
 
 ## workflow-commands 0.7.0
 

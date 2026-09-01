@@ -1,6 +1,6 @@
 ---
 name: orchestrating-beads-tickets
-description: Use when coordinating two or more independent ready Beads tickets in parallel - isolates workers, preserves dependency order, handles provider failures, integrates serially, and verifies the combined result before closing tickets
+description: Use when coordinating two or more independent ready Beads tickets in parallel - isolates workers, preserves dependency order, delegates provider fallback to the task runtime, integrates serially, and verifies the combined result before closing tickets
 user-invocable: false
 ---
 
@@ -8,7 +8,7 @@ user-invocable: false
 
 ## Overview
 
-Run independent tickets concurrently, then integrate their work serially. The coordinator owns selection, isolation, provider routing, fan-in, verification, and tracker reconciliation. Each worker owns one ticket.
+Run independent tickets concurrently, then integrate their work serially. The coordinator owns selection, isolation, fan-in, verification, and tracker reconciliation. The task runtime owns provider fallback. Each worker owns one ticket.
 
 **Announce:** "I'm orchestrating independent Beads tickets in isolated worktrees."
 
@@ -48,7 +48,7 @@ Run one ticket directly when work is small, ownership is uncertain, or the ticke
 4. Workers never close tickets or mutate the integration branch.
 5. Integration is serial, even when implementation is parallel.
 6. Worker reports and clean cherry-picks are evidence, not verification.
-7. Tickets close only after the integrated revision passes its required checks and is published through the repository's normal completion path.
+7. Ticket closure remains provisional until the verified source is published and its local reconciliation commit passes the path check and push.
 
 Deadline, sunk-cost, or authority pressure does not weaken these invariants. Reduce the wave or ship a verified subset instead.
 
@@ -60,9 +60,8 @@ Deadline, sunk-cost, or authority pressure does not weaken these invariants. Red
 2. Invoke `beads-deciduous-integration` for canonical tracker semantics and the repository-declared tracker and generated decision-graph paths.
 3. Record the current target branch and preserve unrelated changes.
 4. Refresh the target branch. Resolve and record its exact `target-sha`.
-5. Inspect OMP provider routing only with `omp config get retry.modelFallback` and `omp config get retry.fallbackChains`. Never read the full OMP config, dump the environment, or read credential files. If either field-scoped query is unavailable or fails, treat alternate routing as unavailable and use the exhausted-infrastructure path in Section 4.
-6. Generate a new unique run ID for every invocation. Set the run actor to `orchestrate:<run-id>`. Never recover a run ID or adopt branch, worktree, assignee, or metadata from an earlier run.
-7. Log a Deciduous action with the run ID, target branch, `target-sha`, and candidate ticket IDs. Do not include provider configuration or credentials.
+5. Generate a new unique run ID for every invocation. Set the run actor to `orchestrate:<run-id>`. Never recover a run ID or adopt branch, worktree, assignee, or metadata from an earlier run.
+6. Log a Deciduous action with the run ID, target branch, `target-sha`, and candidate ticket IDs. Do not include infrastructure configuration or credentials.
 
 The integration branch always uses a dedicated integration worktree. Preserve unrelated changes in every existing worktree.
 
@@ -71,7 +70,7 @@ The integration branch always uses a dedicated integration worktree. Preserve un
 For each candidate:
 
 1. Run `bd show <ticket-id> --json`.
-2. Require `open` status. Reject every in-progress or blocked ticket and direct its recovery to `/workflow-commands:continue <ticket-id>`. Never adopt its orchestration metadata.
+2. Require `open` status. Reject every in-progress or blocked ticket. Earlier orchestration ownership is stale: never adopt its run ID, branch, worktree, assignee, or metadata. Report useful state for explicit manual recovery, or report the exact administrative release procedure below for an empty claim.
 3. Require a leaf implementation ticket with no unresolved hard blocker. Exclude epics, parent batches, and parents with required open children; reconcile these containers in Section 8.
 4. Read its description, acceptance criteria, dependencies, parent-child relationships, comments, and referenced code.
 5. Determine the smallest credible write set and verification surface.
@@ -108,9 +107,9 @@ After selecting the wave and before creating worktrees:
 
 Every exit after a successful claim must use one of these paths. This includes setup errors, validation failures, worker failures, cancellation, deferral, publication errors, and coordinator interruption.
 
-Useful state is an implementation commit, an uncommitted implementation change, or ticket-specific investigation that `/continue` can use. An empty branch or worktree is not useful state.
+Useful state is an implementation commit, an uncommitted implementation change, or ticket-specific investigation that an operator can resume manually. An empty branch or worktree is not useful state.
 
-When no useful state exists:
+When no useful state exists in the current run:
 
 1. Remove the partial worker worktree and branch.
 2. While the ticket is still owned by `orchestrate:<run-id>`, release it atomically:
@@ -126,12 +125,28 @@ When no useful state exists:
 3. Re-run `bd show <ticket-id> --json`. Require `open` status, no assignee, and no orchestration metadata. Also confirm that the partial worker branch and worktree no longer exist.
 4. Stop and report the exact unreleased state if any release check fails. If the run has no claimed tickets, also remove its unused integration branch and worktree.
 
+A later invocation never releases ownership from an earlier run. Report the ticket as stale ownership with its exact status, assignee, run ID, branch, and worktree. For an interrupted empty claim, report this administrative release procedure exactly:
+
+1. Inspect the recorded branch and worktree and prove that neither contains a commit, uncommitted implementation, or ticket-specific investigation.
+2. Remove the empty recorded worktree, then delete its empty branch. If either no longer exists, record that fact.
+3. Run:
+
+   ```bash
+   bd update <ticket-id> --status open --assignee "" \
+     --unset-metadata orchestration.run \
+     --unset-metadata orchestration.branch \
+     --unset-metadata orchestration.worktree \
+     --actor "admin:release-stale-orchestration"
+   ```
+
+4. Re-run `bd show <ticket-id> --json` and confirm `open` status, no assignee, no orchestration metadata, and no recorded branch or worktree. If useful state is found at step 1, stop: preserve it and recover it manually instead.
+
 When useful state exists:
 
-1. Preserve the worker branch and worktree.
-2. Keep the ticket in progress. Mark it blocked only when all configured provider routes are exhausted by an infrastructure failure.
-3. Record the failure class, exact reason, current commit, uncommitted paths, completed work, remaining work, branch, worktree, and `/workflow-commands:continue <ticket-id>` recovery command.
-4. Leave the ticket for `/continue`. A later `/orchestrate` invocation must reject it.
+1. Preserve the exact worker branch, worktree, current commit, and uncommitted changes.
+2. Keep the ticket in progress. Mark it blocked only when a final infrastructure error says that the task runtime exhausted its automatic fallback chain.
+3. Record the failure class, exact reason, current commit, uncommitted paths, completed work, remaining work, branch, and worktree.
+4. Require explicit manual recovery in that recorded worktree on that exact branch and state. A later orchestration invocation rejects the ticket and never adopts it.
 
 ### 3. Fix the contracts before fan-out
 
@@ -166,26 +181,21 @@ Observable result, changed paths, commit SHA, and any unresolved risk. Skip vali
 
 A worker implements and commits its ticket directly. It does not dispatch subagents.
 
-### 4. Handle worker and provider failures
+### 4. Handle worker and runtime failures
 
-Classify failure by cause, not by when it occurs. A rate limit, timeout, provider outage, or other provider infrastructure error at any stage is provider failure.
+The task runtime owns its configured automatic provider fallback chain. The coordinator does not inspect provider routing, select providers, track attempted providers, set overrides, retry a provider, or mutate provider configuration. Wait for each dispatched task to settle after the runtime has applied its fallback behavior.
 
-A worker attempt begins with the ticket's initial wave dispatch and ends with success or a post-claim exit. A provider retry does not start a new worker attempt or reset its attempted-provider set.
+When a task settles successfully, continue with Section 5.
 
-For each worker attempt:
+When a task settles with a final provider infrastructure error after runtime fallback exhaustion:
 
-1. Track the identifiers of the initial provider and attempted alternate providers. Record identifiers only, without fallback-chain configuration, credentials, endpoints, or other provider details.
-2. Inspect the assigned worktree before a retry. Preserve useful commits and uncommitted changes.
-3. Select only a configured alternate provider whose identifier is not in the attempt's set. Try each configured alternate at most once.
-4. When useful state exists, continue the same assignment in the same worktree during the current run. Start a fresh worker invocation only when inspection proves that the worktree has no useful state.
-5. Prefer existing fallback chains. If an explicit override is required, use the narrowest task or session scope and restore the prior route immediately after that retry succeeds, fails, or is cancelled.
-6. Use only the field-scoped routing queries from Section 1. Never read, print, or place provider credentials in prompts, logs, URLs, or command arguments.
-
-When no untried configured alternate remains, restore every active override and stop provider retries. Apply the post-claim exit contract: mark the ticket blocked when useful state exists; otherwise remove partial Git state and release the ticket to open. Record the exact infrastructure reason without provider configuration details.
+1. Inspect the assigned worktree and preserve useful commits and uncommitted changes.
+2. Apply the post-claim exit contract.
+3. Report the final infrastructure error without credentials, endpoints, routing configuration, or other provider details.
 
 For implementation failures, apply the post-claim exit contract and let independent siblings finish. Do not discard successful sibling commits because one worker failed.
 
-Log a Deciduous decision whenever provider availability materially changes a ticket's route or state. Record the ticket, provider identifiers attempted, failure class, chosen alternate or exhausted path, and rationale. Do not record configuration or credentials.
+Log a Deciduous decision for a settled failure. Record the ticket, failure class, final reason, preserved state, and exit path. Do not record provider identifiers, routing configuration, or credentials.
 
 ### 5. Verify worker deliveries
 
@@ -220,39 +230,37 @@ After the full successful wave is assembled:
 1. Run every affected ticket's focused acceptance checks on the integrated tree.
 2. Exercise each changed observable surface with a behavioral smoke test.
 3. If two tickets interact only after fan-in, add or run the smallest durable test that protects that combined observable contract.
-4. Require a clean integration worktree. Record the exact pre-gate `HEAD` SHA and Git tree.
+4. Require the source portion of the integration worktree to be clean. Source content is every tracked and untracked path except the repository-declared tracker and generated decision-graph paths. Record the exact pre-gate `HEAD` SHA and a snapshot of that source content.
 5. Invoke `verifying` without `--task` to run the repository-required tests, linters, builds, and review once on the combined revision. The verifier must not close any orchestration ticket.
-6. After `verifying`, require a clean integration worktree and compare both `HEAD` and the Git tree with the pre-gate values. If the SHA or tree changed, or the worktree became dirty, incorporate the change and restart all of Section 7.
-7. If any later integration fix, target-branch update, or new test changes source content, restart all of Section 7 against the new head.
+6. After `verifying`, compare the source-content snapshot with the pre-gate snapshot. Declared tracker or generated decision-graph mutations do not restart verification; preserve them in the worktree and carry them into Section 8. If any source content changed, incorporate the change and restart all of Section 7.
+7. If any later integration fix, target-branch update, new test, or other mutation changes source content, restart all of Section 7 against the new source revision. Do not require whole-worktree cleanliness when only declared tracker or generated decision-graph paths differ.
 
-After all checks pass without a revision change, record the exact verified code revision as `verified-code-sha`. Verification evidence belongs only to that source content. A later tracker-only commit is not whole-tree identical and does not replace `verified-code-sha`.
+After all checks pass without a source-content change, record the pre-gate `HEAD` as `verified-code-sha`. Verification evidence belongs only to that source content. Tracker-only mutations or commits do not replace `verified-code-sha`.
 
 ### 8. Publish, reconcile, and clean up
 
-Invoke `finishing-a-development-branch` only to select a publication path. Do not let it switch, create, or remove branches or worktrees, and do not use its cleanup steps.
+Present these worktree-aware choices directly:
 
-- For a local merge, execute from the existing worktree that owns the target branch.
-- For a pull request, execute from the integration worktree that owns the integration branch.
-- Keeping the branch preserves every ticket and orchestration state for `/continue`; it does not publish or close tickets.
-- Discard is not a valid path for accepted worker work.
+- **Local merge:** merge from the existing worktree that owns the target branch.
+- **Pull request:** create and update the PR from the integration worktree that owns the integration branch.
+- **Keep as-is:** preserve the exact integration and worker branches, worktrees, ticket ownership, and recorded recovery context. This does not publish or close tickets and requires explicit manual recovery.
 
-The supported publication paths are local merge and pull request. Preserve the integration branch, integration worktree, worker recovery state, assignees, and orchestration metadata until publication, exact published-code verification, and tracker reconciliation finish.
+Discard is unavailable after worker work has been accepted. Defer all branch and worktree cleanup until publication and reconciliation succeed.
 
 If the publication path creates or updates a GitHub PR, invoke `pr-review-loop` and follow its timeout and clean-exit rules. If PR review, merge resolution, publication, or a branch update changes source content, return to Section 7 and record the new `verified-code-sha`.
 
-After the verified revision reaches the target branch:
+After the verified source reaches the target branch:
 
 1. Resolve the published target SHA and confirm that it contains each accepted worker change.
-2. Before tracker mutation, require the published SHA to equal `verified-code-sha`, or to contain it with an identical Git tree. If its source content differs, run Section 7 on that exact published revision and record a new `verified-code-sha`.
-3. Comment on each ticket with the commit or PR and verification evidence.
-4. Close only tickets represented by the final verified published revision.
-5. Leave failed, blocked, deferred, or omitted tickets open with exact recovery state.
-6. Close a parent batch or epic last, only when all required children are closed.
-7. Log a final Deciduous outcome with the run ID, publication path, closed tickets, and tickets left open with reasons.
-8. Push tracker data and Git changes according to repository directives.
-9. Resolve the post-reconciliation revision. Diff it from `verified-code-sha` and require every changed path to be a repository-declared tracker path or generated decision-graph path. If any source path changed, return to Section 7 on that source revision, publish it through the selected path, and repeat reconciliation.
-10. Do not compare or claim whole-tree identity between `verified-code-sha` and tracker-only commits. The path-bound diff is the reconciliation proof.
-11. Only after tracker reconciliation, its push, and the path-bound diff succeed, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
+2. Require its source content to match `verified-code-sha`. If source content differs, run Section 7 on that exact published revision and record a new `verified-code-sha`.
+3. Record the exact pre-reconciliation ticket states and ownership. Treat every following tracker comment, closure, parent reconciliation, and Deciduous outcome as provisional.
+4. Add the commit or PR and verification evidence to each represented ticket, close represented tickets, reconcile eligible parents last, and log the final Deciduous outcome. Leave failed, blocked, deferred, or omitted tickets in their recorded state.
+5. From the existing worktree that owns the published target branch, create the reconciliation commit locally according to repository directives. It must contain the provisional tracker and generated decision-graph changes, including tracker-only mutations carried from Section 7.
+6. Before any push, diff the reconciliation commit from `verified-code-sha`. Require every changed path to be a repository-declared tracker path or generated decision-graph path.
+7. If the diff contains a source path, do not push. Reopen closed tickets and restore every provisional ticket state and ownership to the recorded pre-reconciliation values. Preserve all worker and integration branches and worktrees. Repair or verify the source change through Section 7, then repeat publication and reconciliation with a new local reconciliation commit.
+8. Push the reconciliation commit only after the path check succeeds. Tracker comments, closures, parent state, and Deciduous outcomes become final only when that push succeeds. On push failure, keep them provisional, preserve ownership and all recovery state, and report the publication error.
+9. Do not compare or claim whole-tree identity between `verified-code-sha` and the reconciliation commit. The pre-push path-bound diff is the reconciliation proof.
+10. Only after the reconciliation push succeeds, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
 
 ## Completion Report
 
@@ -264,7 +272,7 @@ Report facts in a table:
 Also report:
 
 - tickets excluded from the wave and why;
-- provider identifiers attempted, without configuration or credential details;
+- final infrastructure errors, without routing configuration, provider identifiers, or credentials;
 - conflicts or hidden coupling found;
 - published branch or PR; and
 - remaining ready or blocked tickets.
@@ -277,5 +285,5 @@ Also report:
 | "They touch the same file but can coordinate" | Serialize them or partition ownership before dispatch |
 | "The worker says tests passed" | Verify the integrated revision independently |
 | "The cherry-pick was clean" | Run combined behavioral verification |
-| "One provider is rate-limited" | Try each configured alternate at most once, then use the exhausted-infrastructure path |
+| "One provider is rate-limited" | Let the task runtime apply its configured automatic fallback chain; act only on the settled task result |
 | "The deadline requires closing now" | Publish a verified subset and leave unfinished tickets open |
