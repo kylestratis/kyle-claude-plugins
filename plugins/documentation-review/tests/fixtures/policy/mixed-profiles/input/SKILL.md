@@ -1,10 +1,10 @@
 # Skill Documentation: Advanced Workflow Orchestration
 
-This skill enables complex workflow orchestration with conditional branching and parallel execution paths.
+This skill uses a run plan to control conditional branching and parallel execution paths.
 
 ## Overview
 
-Use this skill to manage workflows. Workflows can be executed with different configurations. Configuration is passed to the execute_workflow function.
+Use this skill to manage workflows. The usage instructions call the run plan an execution blueprint. Pass configuration to the `execute_workflow` function.
 
 ## Parameters
 

@@ -78,7 +78,7 @@ Zero-finding regions enforce that profile protections and safety constraints sup
 
 **Input:** Two files: `CLAUDE.md` establishing a repository term preference, and `README.md` using a different term.
 
-**Expected:** No finding, because the `CLAUDE.md` directive controls terminology in the repository. Or, a finding citing the directive in the reason if a conflict is detected.
+**Expected:** One `WR-001` finding whose reason cites the repository directive as the controlling precedence tier 1 source.
 
 ### historical-provenance
 

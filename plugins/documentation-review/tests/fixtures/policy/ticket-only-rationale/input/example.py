@@ -9,10 +9,8 @@ def process_workflow(workflow_data):
     # See issue #1234 for context
     config = parse_config(workflow_data)
     
-    # Initialize the execution context
     context = ExecutionContext()
     
-    # Execute each step
     for step in config.steps:
         result = execute_step(step, context)
         if not result.success:
@@ -23,7 +21,7 @@ def process_workflow(workflow_data):
 
 
 def validate_workflow(workflow_data):
-    """Validate workflow structure."""
+    """Return whether workflow_data contains every required field."""
     # This validation was updated per ticket #892 (see the discussion thread for rationale)
     required_fields = ["name", "steps", "timeout"]
     for field in required_fields:
