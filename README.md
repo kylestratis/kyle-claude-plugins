@@ -539,16 +539,19 @@ Resume work on an existing beads task.
 ---
 ### `/workflow-commands:orchestrate`
 
-Coordinate independent open leaf Beads tickets in isolated worktrees.
+Coordinate independent open leaf Beads tickets in isolated worktrees. Linear issues can be passed directly.
 
 ```bash
-/workflow-commands:orchestrate [<ticket-id> ...] [--max-parallel <count>]
+/workflow-commands:orchestrate [<beads-id | linear-ref> ...] [--max-parallel <count>]
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `<ticket-id>` | Restrict the candidate set to specific open leaf Beads tickets |
+| `<beads-id>` | Restrict the candidate set to specific open leaf Beads tickets |
+| `<linear-ref>` | A Linear issue identifier such as `ENG-123`, or a `linear.app` issue URL |
 | `--max-parallel <count>` | Optional exact two-token positive worker limit; use it at most once; defaults to 4 and is capped at the runtime limit |
+
+Linear references require the Linear MCP connector. Each one resolves to exactly one Beads ticket by `linear.identifier` metadata, or creates that ticket from the Linear issue when no mapping exists, before any claim. Beads stays the execution tracker; Linear is mirrored for visibility at claim and again only after reconciliation is final, and a mirror failure never changes Beads state or blocks the run.
 
 Without ticket IDs, the workflow starts from `bd ready`. Each invocation creates a new run and rejects in-progress, blocked, or stale-owned tickets; useful state stays on its exact branch and worktree for explicit manual recovery, while an interrupted empty claim requires administrative release. The task runtime owns its configured automatic provider fallback chain. The workflow creates its integration branch and all worker branches from one target revision, keeps all tracker state in the integration worktree, integrates worker commits serially, and verifies source content while excluding the exact tracked export allowlist. It offers a local merge, a pull request, or keep-as-is; accepted worker work cannot be discarded. Ticket comments, closures, and outcomes become final only after the exact tracker-only reconciliation commit passes its path check and a fresh fetch proves that the target branch contains it; pushing a reconciliation branch or opening its pull request is not finality.
 

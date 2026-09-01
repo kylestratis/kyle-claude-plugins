@@ -19,6 +19,7 @@ Coordinate independent Beads tickets with isolated workers, serial integration, 
 - Binds verification to source content excluding repository-declared tracker and generated decision-graph paths
 - Presents local merge, pull request, and keep-as-is directly; accepted worker work cannot be discarded
 - Makes tracker comments, closures, and outcomes final only after the exact tracker-only reconciliation commit passes its path check and reaches the target branch
+- Accepts Linear issue identifiers and URLs, resolving each to an existing linked Beads ticket or creating one before any claim, and mirrors claim and final reconciliation back to Linear as reporting only
 
 ## workflow-commands 0.7.0
 

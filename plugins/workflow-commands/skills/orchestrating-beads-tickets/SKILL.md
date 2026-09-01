@@ -1,6 +1,6 @@
 ---
 name: orchestrating-beads-tickets
-description: Use when coordinating two or more independent ready Beads tickets in parallel - isolates workers, preserves dependency order, delegates provider fallback to the task runtime, integrates serially, and verifies the combined result before closing tickets
+description: Use when coordinating two or more independent ready Beads or Linear tickets in parallel - resolves Linear references to Beads tickets, isolates workers, preserves dependency order, delegates provider fallback to the task runtime, integrates serially, and verifies the combined result before closing tickets
 user-invocable: false
 ---
 
@@ -14,10 +14,11 @@ Run independent tickets concurrently, then integrate their work serially. The co
 
 ## Arguments
 
-`[<ticket-id> ...] [--max-parallel <count>]`
+`[<ticket-ref> ...] [--max-parallel <count>]`
 
-- With ticket IDs, evaluate only those tickets.
-- Without ticket IDs, start from `bd ready --json`.
+- A ticket reference is either a Beads ticket ID or a Linear issue reference.
+- With ticket references, evaluate only those tickets.
+- Without ticket references, start from `bd ready --json`.
 - `--max-parallel` defaults to 4 and limits a wave; it is not a target to fill.
 
 Parse the complete argument string before any Beads or Deciduous mutation:
@@ -25,7 +26,10 @@ Parse the complete argument string before any Beads or Deciduous mutation:
 1. Accept zero or one exact two-token `--max-parallel <count>` option in any argument position.
 2. Require `<count>` to match `^[1-9][0-9]*$`.
 3. Reject a duplicate option, an unknown option, `--max-parallel=<count>`, a missing value, zero, a negative value, or any malformed value.
-4. Treat all remaining tokens as ticket IDs.
+4. Treat all remaining tokens as ticket references and classify each one:
+   - a `linear.app` issue URL, or a bare token matching `^[A-Z][A-Z0-9]*-[0-9]+$`, is a Linear reference;
+   - every other token is a Beads ticket ID.
+5. Reject a duplicate ticket reference and any token that is neither a valid Linear reference nor a plausible Beads ID.
 
 Stop without mutation when parsing fails. Cap the effective value at the task runtime's advertised concurrent-agent limit.
 
@@ -67,6 +71,38 @@ Deadline, sunk-cost, or authority pressure does not weaken these invariants. Red
 
 Preserve unrelated changes in every existing worktree. Preserve the integration worktree and its tracker state until reconciliation becomes final or every claimed ticket has been released.
 
+#### Resolve Linear references
+
+Beads remains the execution tracker. A Linear reference is resolved to exactly one Beads ticket before wave building, and the resulting Beads ticket ID is what the rest of this workflow uses.
+
+Run this step in the integration worktree, before any claim, only when the argument list contains at least one Linear reference. Require the Linear MCP connector. Stop without mutation when it is unavailable, when a referenced issue cannot be read, or when the caller lacks access.
+
+For each Linear reference, in order:
+
+1. Read the Linear issue and record its identifier, URL, title, description, acceptance criteria, priority, state, and parent.
+2. Look up an existing mapping:
+
+   ```bash
+   bd list --all --metadata-field linear.identifier=<IDENTIFIER> --json --no-pager
+   ```
+
+3. Exactly one match is the mapped ticket. Two or more matches are ambiguous: stop without mutation and report every candidate. Never guess a mapping.
+4. No match creates the Beads ticket from the Linear issue:
+
+   ```bash
+   bd create "<title>" -t task -p <mapped-priority> \
+     --description "<description>" --acceptance "<acceptance criteria>" \
+     --external-ref "<linear-url>" \
+     --set-metadata "linear.identifier=<IDENTIFIER>" \
+     --set-metadata "linear.url=<linear-url>"
+   ```
+
+   Map Linear priority urgent, high, medium, and low to Beads P0, P1, P2, and P3. Map no priority to the Beads default. Import the Linear issue's own content only. Never invent acceptance criteria that the Linear issue does not state.
+5. Re-read the created or matched ticket and require its `linear.identifier` metadata to equal the reference. Add the reverse link once per ticket: a Beads comment naming the Linear URL, and a Linear comment naming the Beads ticket ID.
+6. Deduplicate. Two Linear references that resolve to one Beads ticket, or a Linear reference that resolves to a Beads ID also passed directly, contribute exactly one candidate.
+
+Log one Deciduous decision recording each Linear reference, its resolved Beads ticket ID, and whether that ticket was matched or created. A newly created ticket is an ordinary `open` candidate and receives no exemption from any wave gate below.
+
 ### 2. Build one runnable wave
 
 For each candidate:
@@ -104,6 +140,8 @@ After selecting the wave and before creating worktrees:
    A nonzero claim means another actor owns the ticket. Exclude that ticket from the wave and do not overwrite its assignee or metadata.
 3. Re-run `bd show <ticket-id> --json` after each successful claim. Require `in_progress` status, assignee `orchestrate:<run-id>`, and exact ownership metadata. Apply the post-claim exit contract when any check fails.
 4. From the integration worktree, log one Deciduous decision with the selected wave, every exclusion and reason, and the ownership partition.
+
+A mapped ticket also mirrors its claim to Linear: move the linked issue to the team's started state and comment the run ID, branch, and worktree. The Linear mirror is reporting only. A mirror failure never blocks the wave, never changes Beads state, and is reported with its exact reason.
 
 #### Post-claim exit contract
 
@@ -280,20 +318,23 @@ After the verified source reaches the target branch:
 14. Do not compare or claim whole-tree identity between `verified-code-sha` and the reconciliation commit. The path-bound diff of the actual reconciliation commit and its presence on the target are the reconciliation proof.
 15. Only after reconciliation becomes final, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
 
+A mapped ticket mirrors reconciliation to Linear only after finality in step 11: comment the published commit or PR and the verification evidence on the linked issue, then move it to the team's completed state. Never mirror a provisional closure. If reconciliation is rejected in step 12, comment the supersession on any issue that already received a mirrored update and restore its previous state. A Linear mirror failure never affects the path proof, the containment proof, or Beads state; report it with the exact issue identifier and reason.
+
 ## Completion Report
 
 Report facts in a table:
 
-| Ticket | Worker result | Integrated commit | Verification | Tracker state |
-|---|---|---|---|---|
+| Ticket | Linear issue | Worker result | Integrated commit | Verification | Tracker state |
+|---|---|---|---|---|---|
 
 Also report:
 
 - tickets excluded from the wave and why;
 - final infrastructure errors, without routing configuration, provider identifiers, or credentials;
 - conflicts or hidden coupling found;
-- published branch or PR; and
-- remaining ready or blocked tickets.
+- published branch or PR;
+- remaining ready or blocked tickets; and
+- every Linear reference that was newly created as a Beads ticket, and every Linear mirror that failed, with its exact reason.
 
 ## Rationalization Guard
 
@@ -305,3 +346,4 @@ Also report:
 | "The cherry-pick was clean" | Run combined behavioral verification |
 | "One provider is rate-limited" | Let the task runtime apply its configured automatic fallback chain; act only on the settled task result |
 | "The deadline requires closing now" | Publish a verified subset and leave unfinished tickets open |
+| "Linear already shows it done, so it is done" | The Linear mirror is reporting only; finality is the tracker-only commit reaching the target branch |
