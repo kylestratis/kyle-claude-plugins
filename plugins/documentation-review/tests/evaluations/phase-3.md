@@ -597,3 +597,103 @@ AC2.6: PASS
 ```
 
 **Result:** PASS for `documentation-review.AC2.3` and `documentation-review.AC2.6`. Repeated paths narrowed both scopes before exclusions, and explicit paths did not bypass generated, vendor, or sensitive exclusions.
+
+## GREEN: Task 4 classification and evidence-backed review
+
+Each evaluation was a fresh non-interactive `omp -p` session with `--no-tools --no-skills --no-rules --no-extensions --no-session`. The CLI resolved `--model gpt-5.4-mini` to provider `openai-codex`, model `gpt-5.4-mini`. Each policy session received only the current skill, its three policy references, one fixture's input and oracle, and the evaluation prompt. The default-review session received the skill, references, and its scenario. No subagent ran. Skill SHA-256: `aaabd27d512dabf6ca70648b074e5d7b97e3a988708703ebb261bb112822ae39`.
+
+### Policy fixture prompt
+
+The common prompt was:
+
+```text
+Run this one policy fixture as a repository-scope, review-only evaluation under the attached skill. The attachment paths identify the simulated repository source and expected-findings oracle. Do not call tools or dispatch subagents. Produce the actual complete finding records and zero-finding/protected results, compare every field and ordering rule to the oracle, state that source bytes remain unchanged, then return PASS or FAIL with any exact mismatch.
+```
+
+The repository-precedence prompt additionally identified its attached `CLAUDE.md` as runtime-supplied applicable directive context and required comparison of the controlling precedence tier. The mixed-profiles prompt required comparison of every assigned profile.
+
+### Observed policy results
+
+Every response reported `PASS`, no tools or edits, unchanged source bytes, matching protected and zero-finding regions, and no exact oracle mismatch.
+
+| Fixture | Actual ordered findings | Protected or zero-finding result |
+| --- | --- | --- |
+| `terminology` | `DR-001 WR-001 major documentation review-required` | Title protected; `README.md:13-22` zero findings |
+| `repository-precedence` | `DR-001 WR-001 major documentation review-required` | Reason named `CLAUDE.md:7-9` as precedence tier 1; title zero findings |
+| `historical-provenance` | none | All 23 dates, versions, tickets, authors, security, platform, and ADR spans matched; `CHANGELOG.md:1-52` zero findings |
+| `quoted-and-technical-text` | none | All 14 command, header, URL, quotation, identifier, literal, and signature spans matched |
+| `ticket-only-rationale` | `DR-001..DR-003 WR-005 major comment report-only` | `#1234`, `#3892`, and `#892` preserved; no rationale invented |
+| `repetitive-comment` | `DR-001..DR-009 WR-009 minor comment review-required` | Three purpose-bearing docstrings protected; all suggestions kept deletion review-required |
+| `contract-poor-docstring` | `DR-001..DR-004 WR-010 minor docstring report-only` | All declared identifiers and types preserved; no contract invented |
+| `mixed-profiles` | `DR-001 WR-001 major prompt review-required`; `DR-002,DR-005 WR-010 minor docstring report-only`; `DR-003,DR-004,DR-006..DR-009 WR-009 minor comment review-required` | Changelog classified historical-record with zero findings; command and code identifiers protected |
+
+Representative exact observed records:
+
+```text
+id: DR-001
+location: README.md:3-19
+rule: WR-001
+severity: major
+profile: documentation
+reason: |
+  WR-001 (Consistent terminology) applies because README.md uses "task" and "job" for executable units. Precedence tier 1 controls the canonical choice: CLAUDE.md:7-9 requires "work item" for executable units in new documentation.
+fix_safety: review-required
+```
+
+```text
+id: DR-001
+location: example.py:9
+rule: WR-005
+severity: major
+profile: comment
+evidence: |
+      # See issue #1234 for context
+suggested_action: |
+  No automatic action possible; requires investigation and user judgment. Preserve #1234 and ask the author for the missing lasting reason before revising the comment.
+fix_safety: report-only
+```
+
+**Result:** PASS for all eight Phase 2 policy fixtures. The observed output matched every expected field, profile, protected span, zero-finding region, and ordering rule.
+
+### GREEN-T4-9: Default review
+
+**Prompt:**
+
+```text
+Run the attached default-review scenario with the attached skill as controlling policy. Treat the scenario transcript and hashes as simulated evidence; do not call tools or dispatch subagents. Produce the actual complete ordered findings, scope ledger, protected-span result, snapshot metadata, edit calls, and before/after hashes. Evaluate only the review and snapshot behavior implemented through Gate 5; report Task 5 completion-table fields as pending rather than inventing them. Return PASS or FAIL for AC5.1 and AC5.6 with any exact mismatch.
+```
+
+**Observed findings and actions:**
+
+```text
+DR-001
+location: docs/guide.md:1
+rule: WR-001
+severity: major
+profile: documentation
+evidence: Use the worker for queue jobs. The processor should acknowledge `JobReady` with `queue ack --id "$JOB_ID"`.
+suggested_action: Review the queue-job terminology and replace the two variants with one canonical term consistently throughout the guide, while preserving `JobReady` and `queue ack --id "$JOB_ID"` verbatim.
+fix_safety: review-required
+
+DR-002
+location: src/widget.py:1-3
+rule: WR-010
+severity: minor
+profile: docstring
+evidence: """run_job(job_id: str) -> Result."""
+suggested_action: No automatic action possible; requires investigation and user judgment.
+fix_safety: report-only
+
+scope ledger: docs/guide.md and src/widget.py reviewed; no constrained-out, excluded, unreadable, or unsupported paths
+snapshot: 2 consolidated ordered findings with exact simulated evidence and source policy
+edits: none
+```
+
+Observed hashes:
+
+| Path | Before | After |
+| --- | --- | --- |
+| `docs/guide.md` | `318fbfa61c5f71a6c938ec006fd14abe9c0b9791bd46bde384f7562b6c45bbdc` | `318fbfa61c5f71a6c938ec006fd14abe9c0b9791bd46bde384f7562b6c45bbdc` |
+| `src/widget.py` | `021331ece227a6468f2c78a6918a091b8ce4b213cae5883432f31fb074500c46` | `021331ece227a6468f2c78a6918a091b8ce4b213cae5883432f31fb074500c46` |
+
+**Result:** PASS for the Task 4 portions of `documentation-review.AC5.1` and `documentation-review.AC5.6`. The response preserved review-only bytes and every protected token, created the snapshot, and correctly left Task 5 completion-table fields pending.
