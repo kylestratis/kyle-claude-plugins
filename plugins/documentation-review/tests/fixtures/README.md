@@ -102,7 +102,7 @@ Zero-finding regions enforce that profile protections and safety constraints sup
 
 **Input:** A Python file with a comment citing only a ticket number without explanation.
 
-**Expected:** One finding citing `WR-005` with `fix_safety: report-only`. No invented replacement.
+**Expected:** Three findings cite `WR-005` with `fix_safety: report-only`. No finding invents a replacement.
 
 ### repetitive-comment
 
@@ -110,7 +110,7 @@ Zero-finding regions enforce that profile protections and safety constraints sup
 
 **Input:** A Python file with an inline comment repeating adjacent code semantics.
 
-**Expected:** One finding citing `WR-009`. The suggestion indicates that deletion requires independent verification.
+**Expected:** Nine findings cite `WR-009`. Each suggestion says that deletion requires independent verification.
 
 ### contract-poor-docstring
 
@@ -118,7 +118,7 @@ Zero-finding regions enforce that profile protections and safety constraints sup
 
 **Input:** A Python file with a Google-style docstring that repeats function name, signature, and parameter types without contract details.
 
-**Expected:** One finding citing `WR-010` with `fix_safety: report-only`. No invented contract details.
+**Expected:** Four findings cite `WR-010` with `fix_safety: report-only`. No finding invents contract details.
 
 ### mixed-profiles
 

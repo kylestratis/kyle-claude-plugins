@@ -151,7 +151,6 @@ A reasonable replacement exists, but meaning, tone, scope, deletion safety, or p
 - Deciding whether a comment is safe to delete or should be preserved.
 - Resolving ambiguous pronouns; the correct referent is clear from context, but confirming it requires human judgment.
 - Reordering steps in a procedure; the order seems wrong, but operational impact must be verified.
-- Adding a missing piece of information (e.g., a rationale) requires confirming the actual reason.
 
 A `review-required` fix is proposed but marked for human review before application. The reviewer must examine the context, understand the intent, and confirm that the replacement is appropriate.
 
@@ -244,8 +243,8 @@ reason: |
   controls this finding.
 suggested_action: |
   Review this wording as three steps that preserve the reviewed actions:
-  Step 1: Create the configuration file.
-  Step 2: Set the environment variable.
-  Step 3: Run the setup script.
+  Step 1: The operator creates the configuration file.
+  Step 2: The operator sets the environment variable.
+  Step 3: The operator runs the setup script.
 fix_safety: review-required
 ```

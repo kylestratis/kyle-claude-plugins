@@ -267,7 +267,7 @@ For instructions, follow this guide: https://internal.company.com/guides/deploy-
 
 **Compliant:**
 
-From the repository root, run `./deploy --environment production`. Confirm that the command prints `Deployment complete`. The valid internal deployment guide at https://internal.company.com/guides/deploy-v2.html provides troubleshooting details and requires access to the company network.
+From the repository root, the operator runs `./deploy --environment production`. The operator confirms that the command prints `Deployment complete`. The valid internal deployment guide at https://internal.company.com/guides/deploy-v2.html provides troubleshooting details and requires access to the company network.
 
 ---
 

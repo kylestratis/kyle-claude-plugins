@@ -17,7 +17,7 @@ See the original OAuth 2.0 specification at https://tools.ietf.org/html/rfc6749 
 The platform defines several core entities. According to the original design spec: "A task is a unit of executable work that contains one or more steps, each of which runs in an isolated environment."
 
 The system uses three identifiers internally:
-- `task_id`: The unique identifier for a work item
+- `task_id`: The unique identifier for a task
 - `workflow_id`: The identifier for a collection of related tasks
 - `execution_context`: The runtime environment name
 

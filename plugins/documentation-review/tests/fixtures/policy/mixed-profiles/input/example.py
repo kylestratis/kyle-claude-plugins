@@ -2,10 +2,10 @@
 
 def parse_workflow_config(config_dict):
     """Parse configuration.
-    
+
     Args:
         config_dict: Configuration dictionary
-    
+
     Returns:
         Configuration object
     """
@@ -19,11 +19,11 @@ def parse_workflow_config(config_dict):
 
 def execute_step(step, context):
     """Execute a workflow step.
-    
+
     Args:
         step: Step definition
         context: Execution context
-        
+
     Returns:
         Step execution result
     """
