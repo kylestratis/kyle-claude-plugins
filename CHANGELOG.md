@@ -1,5 +1,26 @@
 # Changelog
 
+## workflow-commands 0.8.0
+
+Coordinate independent Beads tickets with isolated workers, serial integration, and combined verification.
+
+**New:**
+- Added `/workflow-commands:orchestrate` and the `orchestrating-beads-tickets` skill
+- Selects ready tickets with non-overlapping write sets, gives each active ticket one worktree, and preserves hard dependency order
+- Delegates provider infrastructure fallback exclusively to the task runtime's configured automatic chain and handles only the settled task result
+- Verifies the combined revision before publishing changes or closing represented tickets
+
+**Fixed:**
+- Starts each orchestration with a new run ID, rejects earlier ownership, preserves useful state for explicit manual recovery, and reports the administrative release procedure for stale empty claims
+- Creates the integration branch and every worker branch from one recorded target revision
+- Defines release and manual recovery state for every post-claim exit
+- Accepts one exact `--max-parallel <positive-integer>` option before tracker mutation
+- Removes coordinator-selected provider routes, explicit overrides, attempted-provider sets, and one-try promises
+- Binds verification to source content excluding repository-declared tracker and generated decision-graph paths
+- Presents local merge, pull request, and keep-as-is directly; accepted worker work cannot be discarded
+- Makes tracker comments, closures, and outcomes final only after the exact tracker-only reconciliation commit passes its path check and reaches the target branch
+- Accepts Linear issue identifiers and URLs, resolving each to an existing linked Beads ticket or creating one before any claim, and mirrors claim and final reconciliation back to Linear as reporting only
+
 ## workflow-commands 0.7.0
 
 Add automated remediation for GitHub Codex Review findings.

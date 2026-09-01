@@ -153,7 +153,7 @@ Design and implementation workflow framework.
 
 #### Linear Integration
 
-If using `--linear` flag with `/workflow-commands:intake`:
+If using the `--linear` flag with `/workflow-commands:intake`, or passing Linear references to `/workflow-commands:orchestrate`:
 - Must have Linear MCP connector enabled in Claude
 - Requires access to at least one Linear team
 
@@ -537,6 +537,27 @@ Resume work on an existing beads task.
 ```
 
 ---
+### `/workflow-commands:orchestrate`
+
+Coordinate independent open leaf Beads tickets in isolated worktrees. Linear issues can be passed directly.
+
+```bash
+/workflow-commands:orchestrate [<beads-id | linear-ref> ...] [--max-parallel <count>]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<beads-id>` | Restrict the candidate set to specific open leaf Beads tickets |
+| `<linear-ref>` | A Linear issue identifier such as `ENG-123`, or a `linear.app` issue URL |
+| `--max-parallel <count>` | Optional exact two-token positive worker limit; use it at most once; defaults to 4 and is capped at the runtime limit |
+
+Linear references require the Linear MCP connector. Each one resolves to exactly one Beads ticket by `linear.identifier` metadata, or creates that ticket from the Linear issue when no mapping exists, before any claim.
+
+The two trackers have fixed roles. Beads is the execution tracker that agents read and write; it holds claims, dependency order, ownership, and completion evidence. Linear is the human progress view: it is mirrored to the started state at claim, and to the completed state with commit or PR evidence only after reconciliation is final. Provisional closures are never mirrored, a rejected reconciliation posts a supersession comment, and a mirror failure never changes Beads state, blocks the run, or counts as evidence.
+
+Without ticket IDs, the workflow starts from `bd ready`. Each invocation creates a new run and rejects in-progress, blocked, or stale-owned tickets; useful state stays on its exact branch and worktree for explicit manual recovery, while an interrupted empty claim requires administrative release. The task runtime owns its configured automatic provider fallback chain. The workflow creates its integration branch and all worker branches from one target revision, keeps all tracker state in the integration worktree, integrates worker commits serially, and verifies source content while excluding the exact tracked export allowlist. It offers a local merge, a pull request, or keep-as-is; accepted worker work cannot be discarded. Ticket comments, closures, and outcomes become final only after the exact tracker-only reconciliation commit passes its path check and a fresh fetch proves that the target branch contains it; pushing a reconciliation branch or opening its pull request is not finality.
+
+---
 
 ### `/documentation-review:review`
 
@@ -604,6 +625,7 @@ provenance — is never rewritten.
 | `/workflow-commands:task` | Small standalone work (<1hr) | Single task |
 | `/workflow-commands:bug` | Fix a bug | Bug |
 | `/workflow-commands:continue` | Resume existing work | Nothing (uses existing) |
+| `/workflow-commands:orchestrate` | Run independent ready tickets concurrently | Nothing (uses existing) |
 | `/workflow-commands:explore` | Research before design | Research task |
 | `/workflow-commands:intake` | Import roadmap | Epics |
 | `/workflow-commands:pollinate` | Port a feature from another codebase | Design document |
@@ -643,6 +665,20 @@ provenance — is never rewritten.
     ▼                                           │
 git commit / PR ────────────────────────────────┘
 ```
+
+### Parallel Ticket Workflow
+
+For existing ready tickets with disjoint ownership:
+
+```bash
+/workflow-commands:orchestrate beads-a1b2 beads-c3d4 --max-parallel 2
+/workflow-commands:orchestrate ENG-412 ENG-419   # Linear issues, resolved to beads tickets first
+# isolated workers → serial integration → combined verification → publish → close
+```
+
+Dependent or overlapping open tickets can remain for a later wave. Failed or unverified useful state remains on its recorded branch and worktree for explicit manual recovery and is never adopted by a later orchestration run.
+
+Beads is the execution tracker for agents. Linear issues passed here resolve to their linked beads tickets, or create them, and Linear is then mirrored for human visibility only.
 
 ### Quick Task Workflow
 
@@ -828,7 +864,8 @@ kyle-claude-plugins/
 │   │   │   ├── fix-pr-review.md
 │   │   │   ├── task.md          # NEW
 │   │   │   ├── bug.md           # NEW
-│   │   │   └── continue.md      # NEW
+│   │   │   ├── continue.md
+│   │   │   └── orchestrate.md
 │   │   └── skills/
 │   │       ├── project-init/SKILL.md
 │   │       ├── intake/SKILL.md
@@ -841,6 +878,7 @@ kyle-claude-plugins/
 │   │       ├── task/SKILL.md              # NEW
 │   │       ├── bug/SKILL.md               # NEW
 │   │       ├── continue/SKILL.md          # NEW
+│   │       ├── orchestrating-beads-tickets/SKILL.md
 │   │       └── beads-deciduous-integration/SKILL.md
 │   └── tracking-hooks/
 │       ├── .claude-plugin/plugin.json

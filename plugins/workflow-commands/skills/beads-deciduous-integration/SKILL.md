@@ -27,6 +27,22 @@ user-invocable: true
 | `plan` | Creates phase tasks | Logs planning decisions |
 | `execute` | Updates status | **Logs impl decisions** |
 | `verify` | Closes epic | Logs outcome |
+| `orchestrate` | Claims and reconciles tickets | Logs run action, wave and material routing/coupling decisions, and outcome |
+
+## Tracked Export Allowlist
+
+The default tracked export allowlist is exactly:
+
+- `.beads/issues.jsonl`
+- `.beads/interactions.jsonl`
+- `.beads/metadata.json`
+- `.deciduous/patches/**`
+
+Repository directives may add exact paths. They never broaden the allowlist to a whole directory. If the effective allowlist is ambiguous, orchestration stops before claiming a ticket.
+
+`orchestrating-beads-tickets` consumes this exact effective allowlist for source-content exclusions and reconciliation path proof.
+
+Only these exported paths cross worktrees. The local Beads and Deciduous databases are untracked per-worktree state, so a workflow that spans multiple worktrees must mutate tracker state in one owning worktree and move the resulting allowlisted exports into any other worktree that commits them.
 
 ## Quick Reference
 
@@ -85,6 +101,7 @@ deciduous add action "Implemented <feature>" --commit HEAD
 | `/workflow-commands:task` | Small standalone work (<1 hour) |
 | `/workflow-commands:bug` | Fix a bug |
 | `/workflow-commands:continue` | Resume existing work |
+| `/workflow-commands:orchestrate` | Coordinate independent ready tickets in parallel |
 
 ## Full Workflow (Large Features)
 
