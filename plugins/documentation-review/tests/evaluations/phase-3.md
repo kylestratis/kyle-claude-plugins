@@ -796,3 +796,107 @@ Recovery: run a new review-only invocation for docs/b.md, inspect the new eviden
 The response returned PASS for `documentation-review.AC6.3`, `documentation-review.AC6.4`, and `documentation-review.AC6.5`, with no mismatch.
 
 **Task 5 result:** PASS for all five required workflow scenarios. Selection boundaries were exact, review-only changed no bytes, protected and stale content remained unchanged, every applied edit had a second review, independent success survived failure, and every incomplete item had an exact reason and recovery action.
+
+## GREEN: Task 6 full behavioral matrix
+
+### Conditions and skill version
+
+All 19 evaluations below ran in fresh non-interactive `omp -p` sessions with `--no-tools --no-skills --no-rules --no-extensions --no-session --max-time 10m`. Anthropic remained rate-limited, so the requested Haiku role was evaluated with the available OpenAI provider: provider `openai-codex`, model `gpt-5.4-mini`. No evaluation agent dispatched a subagent.
+
+The completed skill was SHA-256 `a48c4cd1e7c393a19caadeb582e5f2baf97feac745ab757598691716ad413c95` and 265 lines. Each session received that exact `SKILL.md`, only the needed fixture, and the three reference files only when the scenario passed Gate 1.
+
+All tool transcripts, edits, and repository contents in these evaluations were simulated fixture evidence. No installed command, live repository edit, or real GitHub behavior was exercised. Those checks remain pending Phase 4.
+
+### Complete workflow prompt
+
+For each workflow fixture, the complete user prompt consisted of the listed verbatim file attachments followed by this exact text:
+
+```text
+Run the attached workflow behavioral scenario with the attached completed reviewing-documentation skill as the controlling instruction. Treat the fixture's tool-result transcript, source text, edit results, and hashes as the only simulated evidence; do not call tools and do not dispatch subagents. Execute every variant in the scenario. Produce the actual observable ordered actions, the complete finding and completion-report output required by the scenario, file hashes before and after whenever edits are in scope, protected and unchanged results, second-review and recovery results, and an explicit PASS or FAIL for every acceptance criterion listed in the scenario with any exact mismatch. State that this is simulated behavioral evidence and that installed runtime and real GitHub behavior remain pending Phase 4.
+```
+
+The `arguments` session attached `SKILL.md` and `workflow/arguments/scenario.md`. Each other workflow session attached `SKILL.md`, `writing-rules.md`, `surface-profiles.md`, `fix-safety.md`, and its one `workflow/<name>/scenario.md`.
+
+### Workflow actions, reports, hashes, and results
+
+| Scenario | Actual observable actions and report | Before/after evidence | Per-AC result |
+| --- | --- | --- | --- |
+| `arguments` | Preserved the exact routed string and ordered repeated values. Cases 2-7 itemized every error, printed the full grammar, reported `tools_called: none`, and stopped before discovery. | No edits; hashes not applicable. | AC1.3 PASS; AC1.4 PASS |
+| `pr-scope` | Success used only base OID `1111111111111111111111111111111111111111`, matched head `2222222222222222222222222222222222222222`, and limited review to `docs/guide.md:9-10` and `src/widget.py:19`. Failure stopped when no PR existed and prescribed checking out a PR branch or selecting repository scope. | No edits; hashes not applicable. | AC2.1 PASS; AC2.5 PASS |
+| `repository-scope` | Sorted ledger: `.env.local` excluded sensitive; `README.md` reviewed; `assets/logo.png` unreadable binary; `dist/generated.md` excluded build; `docs/runbook.md` reviewed; `node_modules/pkg/README.md` excluded dependency cache; `package-lock.json` excluded lockfile; `src/widget.py` reviewed; `vendor/library/README.md` excluded vendor. `Documentation Review Complete`, review-only, no findings. | No edits; all candidate bytes unchanged. | AC2.2 PASS; AC5.1 PASS |
+| `explicit-path` | Applied path intersection before exclusions in both repository and PR variants. Explicit `.env.local`, generated, and vendor paths remained excluded; constrained-out and unsupported paths remained accounted for. | No edits; hashes not applicable. | AC2.3 PASS; AC2.6 PASS |
+| `profile-override` | With `--profile docs/deploy.md=procedure`, emitted `DR-001`, WR-008, major, procedure, review-required for the single unstructured deployment step. Without the override, classified it as documentation and emitted no finding. Protected `APP_CONFIG` and `deploy --production` stayed exact. | Review-only; `docs/deploy.md` byte-identical. The fixture supplied no digest. | AC3.2 PASS; AC5.1 PASS |
+| `default-review` | Reported ordered `DR-001` WR-001 major documentation review-required and `DR-002` WR-010 minor docstring report-only. Selected/applied none, skipped both, no second review, recovery none. | `docs/guide.md` `318fbfa61c5f71a6c938ec006fd14abe9c0b9791bd46bde384f7562b6c45bbdc` before and after; `src/widget.py` `021331ece227a6468f2c78a6918a091b8ce4b213cae5883432f31fb074500c46` before and after. | AC5.1 PASS; AC5.6 PASS |
+| `approved-fix` | Selected `DR-001` and report-only `DR-003`; applied only `DR-001`; kept omitted `DR-002`; rejected `DR-003`; second-reviewed the changed region; preserved `OPS-431`. | The scenario did not supply a complete file digest. Exact supplied fixture-image bytes hash from `2e33e215f915c7b9df2e4ad69fa97ffbb9edd51360869fe430bf4b686c443074` to `d70817b791fcb646ab346dc156e533afbb8c33c67b159673487b64fe59f53f5d`. | AC5.2 PASS; AC5.4 PASS; AC5.6 PASS |
+| `autofix` | Selected and applied only safe policy-supplied `DR-001`; skipped review-required `DR-002` and report-only `DR-003`; second review passed; URL and `OPS-431` stayed exact. | Exact supplied fixture-image bytes hash from `1117619719e7c5d263a26e0b0d37a2bc96398914b9ca7a3f222656e3ce2d44ab` to `b6392ae194bc1fdc2e85a7c4cae7a72fa9ee6261f4acfa28a5d826b8835a5d34`. | AC5.3 PASS; AC5.4 PASS; AC5.6 PASS |
+| `stale-target` | Byte comparison found current `Use the worker for urgent queue jobs.` did not equal reviewed `Use the worker for queue jobs.` No edit ran. `DR-001` was failed and unresolved; report was Incomplete with a new-review recovery action. | No write; current stale bytes preserved. The fixture supplied no digest. | AC5.2 PASS; AC6.4 PASS |
+| `partial-failure` | Applied and second-reviewed `DR-001`; detected stale `DR-002`; made no second edit; kept `DR-001` applied and concurrent `docs/b.md` text unchanged; report was Incomplete with exact recovery. | Supplied `docs/a.md` region image: `b9daf69ce561e06343d0629436c399f574086c428e30df40b4fe38ccc999820b` to `6734d01c7690009704e984e67349fc3ab7fe8effa6563721ec8473817c61845e`. Supplied current `docs/b.md` region image stayed `413468b2098d2bdf4a7ed0d790b4f4de20d28304e14d617dbb382b4f1246ca34`. | AC6.3 PASS; AC6.4 PASS; AC6.5 PASS |
+
+The three hashes labeled fixture-image hashes are SHA-256 values of the complete ordered region bytes supplied by the fixtures, with a final newline. They are simulated evidence, not hashes of real repository files. The evaluation did not fabricate unavailable full-file digests.
+
+### Complete policy-fixture prompt
+
+For each policy fixture, the complete user prompt consisted of verbatim `SKILL.md`, all three reference files, that fixture's `input/*`, its `expected-findings.md`, and this exact text with the final mapped-criteria list substituted as recorded below:
+
+```text
+Run this one attached policy fixture as a repository-scope, review-only behavioral evaluation under the attached completed reviewing-documentation skill. The attached expected-findings file is the oracle, not a repository directive; for repository-precedence only, the attached CLAUDE.md is runtime-supplied applicable directive context. Treat the attached input files as the complete simulated candidate set. Do not call tools and do not dispatch subagents. Produce the actual complete ordered finding records with every schema field, zero-finding and protected-span results, reviewed surface and unsupported-surface ledger, and before/after hash or explicit byte-identity result. Compare every field, profile, policy source, safety class, protected span, and ordering rule to the oracle. Return PASS or FAIL with any exact mismatch for these mapped criteria: <mapped criteria>. State that this is simulated behavioral evidence and that installed runtime and real GitHub behavior remain pending Phase 4.
+```
+
+Mapped-criteria substitutions were:
+
+- `terminology`: AC3.3, AC4.1, AC4.5.
+- `repository-precedence`: AC3.1, AC3.5, AC4.1.
+- `historical-provenance`: AC3.3, AC3.4, AC3.5.
+- `quoted-and-technical-text`: AC3.5.
+- `ticket-only-rationale`: AC3.6, AC4.1, AC4.2.
+- `contract-poor-docstring`: AC3.3, AC3.6, AC4.1, AC4.3.
+- `repetitive-comment`: AC3.3, AC3.6, AC4.1, AC4.4.
+- `mixed-profiles`: AC3.3, AC3.4, AC3.5, AC3.6, AC4.1, AC4.5, AC4.6.
+
+### Policy actions, actual findings, and results
+
+Every policy response reported `tools_called: none`, review-only byte identity, no modified region, no second review, and no oracle mismatch.
+
+| Fixture | Actual complete finding result | Protected and zero-finding result | Per-AC result |
+| --- | --- | --- | --- |
+| `terminology` | `DR-001`, README.md:7,11, WR-001, major, documentation, review-required; exact evidence tied `task` to `work item`; action required selecting one canonical term. | Title protected; README.md:13-22 zero findings. | AC3.3 PASS; AC4.1 PASS; AC4.5 PASS |
+| `repository-precedence` | `DR-001`, README.md:3-19, WR-001, major, documentation, review-required; reason named `CLAUDE.md:7-9` as controlling tier 1 and required `work item`. | Directive text and title preserved. | AC3.1 PASS; AC3.5 PASS; AC4.1 PASS |
+| `historical-provenance` | No findings. | All dates, versions, ticket IDs, authors, security reference, platform version, and ADR provenance remained exact; CHANGELOG.md:1-52 zero findings. | AC3.3 PASS; AC3.4 PASS; AC3.5 PASS |
+| `quoted-and-technical-text` | No findings. | All command, header, URL, quotation, identifier, literal, and signature spans remained exact. | AC3.5 PASS |
+| `ticket-only-rationale` | Ordered `DR-001` through `DR-003`, WR-005, major, comment, report-only. Every action required investigation instead of invented rationale. | `#1234`, `#3892`, and `#892` preserved; non-comment regions zero findings. | AC3.6 PASS; AC4.1 PASS; AC4.2 PASS |
+| `contract-poor-docstring` | Ordered `DR-001` through `DR-004`, WR-010, minor, docstring, report-only. Every action requested missing contract facts and invented none. | Declared identifiers, types, and return expression preserved. | AC3.3 PASS; AC3.6 PASS; AC4.1 PASS; AC4.3 PASS |
+| `repetitive-comment` | Ordered `DR-001` through `DR-009`, WR-009, minor, comment, review-required. Suggested deletions stayed review-required. | Three purpose-bearing docstrings protected. | AC3.3 PASS; AC3.6 PASS; AC4.1 PASS; AC4.4 PASS |
+| `mixed-profiles` | `DR-001` prompt/WR-001; `DR-002` and `DR-005` docstring/WR-010; `DR-003`, `DR-004`, `DR-006`-`DR-009` comment/WR-009, ordered by path and location with complete fields. | CHANGELOG historical record zero findings; command and code identifiers protected; unsupported source-code-only line identified. | AC3.3 PASS; AC3.4 PASS; AC3.5 PASS; AC3.6 PASS; AC4.1 PASS; AC4.5 PASS; AC4.6 PASS |
+
+### Complete cross-cutting prompt
+
+The final GREEN session attached the skill, references, and only `repository-scope`, `autofix`, and `partial-failure` fixtures, followed by this exact prompt:
+
+```text
+Run a focused simulated behavioral evaluation under the attached completed reviewing-documentation skill. Do not call tools and do not dispatch subagents. Use only these attached workflow fixtures for AC2.4, AC5.5, AC6.1, and AC6.2: repository-scope, autofix, and partial-failure. Execute the relevant fixture behavior and report the exact scope dispositions, report-only unchanged result, second-review result, and complete outcome/recovery report fields. Then execute this additional AC5.7 conflict transcript in autofix mode: reviewed current evidence at docs/guide.md:3 is byte-exact "Start the worker."; DR-001 and DR-002 have overlapping evidence and are both marked safe, but their suggested replacements are respectively "Start the job runner." and "Start the consumer."; the pre-edit Read still returns "Start the worker.". The replacements conflict. Show edit calls, outcome sets, completion label, and exact recovery. Return explicit PASS or FAIL with any exact mismatch for documentation-review.AC2.4, documentation-review.AC5.5, documentation-review.AC5.7, documentation-review.AC6.1, and documentation-review.AC6.2. State that all evidence is simulated and that installed runtime and real GitHub behavior remain pending Phase 4.
+```
+
+Actual result: AC2.4 PASS with every repository candidate in one disposition; AC5.5 PASS with report-only `DR-003` unchanged; AC6.1 PASS with a second review for every applied region; AC6.2 PASS with proposed, selected, applied, skipped, failed, and unresolved sets reconciled. In the conflict transcript, neither edit ran, both findings remained unresolved, and the result was `Documentation Review Incomplete` with recovery `No automatic action possible; conflicting replacements require user judgment.` AC5.7 PASS.
+
+### Full GREEN acceptance matrix
+
+| Criteria | Result and scenario evidence |
+| --- | --- |
+| AC1.3-AC1.4 | PASS — `arguments` |
+| AC2.1, AC2.5 | PASS — `pr-scope` |
+| AC2.2, AC2.4 | PASS — `repository-scope` and cross-cutting ledger check |
+| AC2.3, AC2.6 | PASS — `explicit-path` |
+| AC3.1 | PASS — `repository-precedence` |
+| AC3.2 | PASS — `profile-override` |
+| AC3.3-AC3.6 | PASS — all eight policy fixtures |
+| AC4.1-AC4.6 | PASS — complete policy records, protected spans, consolidation, ordering, and observed-surface ledger |
+| AC5.1 | PASS — repository, profile-override, and default review |
+| AC5.2 | PASS — approved-fix and stale-target |
+| AC5.3 | PASS — autofix |
+| AC5.4-AC5.5 | PASS — approved-fix, autofix, and cross-cutting report-only check |
+| AC5.6 | PASS — default-review, approved-fix, autofix, and policy fixtures |
+| AC5.7 | PASS — cross-cutting conflict transcript |
+| AC6.1-AC6.2 | PASS — autofix, partial-failure, and cross-cutting report audit |
+| AC6.3-AC6.5 | PASS — partial-failure and stale-target |
+
+**Task 6 result:** PASS. Every simulated policy and workflow criterion is GREEN. Installed runtime and real GitHub verification remain explicitly pending Phase 4.
