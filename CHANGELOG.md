@@ -10,6 +10,11 @@ Coordinate independent Beads tickets with isolated workers, serial integration, 
 - Retries provider infrastructure failures through configured alternate providers without treating them as ticket failures
 - Verifies the combined revision before publishing changes or closing represented tickets
 
+**Fixed:**
+- Claims tickets atomically with run-scoped ownership metadata and resumes only matching branches and worktrees
+- Preserves the integration worktree through publication, stable combined verification, and tracker reconciliation
+- Validates the parallel limit before tracker changes and logs orchestration actions, decisions, and outcomes in Deciduous
+
 ## workflow-commands 0.7.0
 
 Add automated remediation for GitHub Codex Review findings.

@@ -548,9 +548,9 @@ Coordinate independent ready Beads tickets in isolated worktrees.
 | Argument | Description |
 |----------|-------------|
 | `<ticket-id>` | Restrict the candidate set to specific Beads tickets |
-| `--max-parallel <count>` | Limit concurrent workers; defaults to 4 |
+| `--max-parallel <count>` | Positive worker limit; defaults to 4 and is capped at the runtime concurrency limit |
 
-Without ticket IDs, the workflow starts from `bd ready`. It excludes overlapping or dependent tickets from the wave, integrates worker commits one at a time, and closes tickets only after the combined revision is verified and published.
+Without ticket IDs, the workflow starts from `bd ready`. It validates arguments before tracker changes, atomically claims each selected ticket for one orchestration run, and excludes overlapping or dependent tickets. It integrates worker commits one at a time, preserves the integration worktree through publication and tracker reconciliation, and closes tickets only after the exact published revision is verified.
 
 ---
 

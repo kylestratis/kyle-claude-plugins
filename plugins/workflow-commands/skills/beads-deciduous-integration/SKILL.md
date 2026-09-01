@@ -27,6 +27,7 @@ user-invocable: true
 | `plan` | Creates phase tasks | Logs planning decisions |
 | `execute` | Updates status | **Logs impl decisions** |
 | `verify` | Closes epic | Logs outcome |
+| `orchestrate` | Claims and reconciles tickets | Logs run action, wave and material routing/coupling decisions, and outcome |
 
 ## Quick Reference
 

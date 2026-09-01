@@ -20,6 +20,8 @@ Run independent tickets concurrently, then integrate their work serially. The co
 - Without ticket IDs, start from `bd ready --json`.
 - `--max-parallel` defaults to 4 and limits a wave; it is not a target to fill.
 
+Parse the complete argument string before any Beads or Deciduous mutation. Require the value supplied to `--max-parallel` to be a positive integer. A malformed flag, a missing flag value, zero, or a negative value stops the run without claiming tickets. Cap the effective value at the task runtime's advertised concurrent-agent limit.
+
 ## When to Use
 
 Use this workflow when at least two ready tickets have:
@@ -52,6 +54,11 @@ Deadline, sunk-cost, or authority pressure does not weaken these invariants. Red
 3. Record the current target branch and preserve unrelated changes.
 4. Refresh the target branch before creating worker branches.
 5. Inspect OMP provider routing only with `omp config get retry.modelFallback` and `omp config get retry.fallbackChains`. Never read the full OMP config, dump the environment, or read credential files. If either field-scoped query is unavailable or fails, treat alternate routing as unavailable and use the blocked path in Section 4.
+6. Establish the orchestration identity before candidate evaluation:
+   - When explicit ticket IDs include in-progress tickets, inspect only their status and structured orchestration metadata. Recover the run ID only when every such ticket has the same non-empty `orchestration.run` value. Stop before tracker mutation if an in-progress ticket lacks that value or the values disagree.
+   - Otherwise, generate a new unique run ID.
+   - Set the run actor to `orchestrate:<run-id>`.
+7. Log a Deciduous action with the run ID, target branch, and candidate ticket IDs. Do not include provider configuration or credentials.
 
 If the current worktree contains unrelated changes, keep integration in a separate worktree.
 
@@ -60,7 +67,7 @@ If the current worktree contains unrelated changes, keep integration in a separa
 For each candidate:
 
 1. Run `bd show <ticket-id> --json`.
-2. Require an open ticket, or an in-progress ticket that a ticket-to-branch/worktree record proves belongs to this orchestration. Status alone is not ownership proof; reject every other in-progress ticket.
+2. Require an open ticket, or an in-progress ticket owned by the recovered run. Resume only when its assignee is exactly `orchestrate:<run-id>`, its `orchestration.run`, `orchestration.branch`, and `orchestration.worktree` metadata are complete and match the recovered identity, the recorded branch exists, and the recorded worktree exists with that branch checked out. Reject every other in-progress ticket.
 3. Require a leaf implementation ticket with no unresolved hard blocker. Exclude epics, parent batches, and parents with required open children; reconcile these containers in Section 8.
 4. Read its description, acceptance criteria, dependencies, parent-child relationships, comments, and referenced code.
 5. Determine the smallest credible write set and verification surface.
@@ -79,10 +86,19 @@ Do not dispatch inspection-only workers or invent work to fill `--max-parallel`.
 
 After selecting the wave and before creating worktrees:
 
-1. Create a unique orchestration run ID, then assign stable branch and worktree names to every selected ticket.
-2. Claim each selected open ticket with `bd update <ticket-id> --status in_progress`.
-3. Record the run ID and each ticket-to-branch/worktree mapping in coordinator state and on the ticket as this orchestration's ownership evidence. Resume an in-progress ticket only when its prior record has the same run ID and its branch/worktree state still matches.
-4. Re-run `bd show <ticket-id> --json` immediately before dispatch. Require `in_progress` state and the matching ownership record; exclude a ticket when either check fails.
+1. Assign stable branch and absolute worktree paths to every selected open ticket. Retain the recorded names for resumed tickets.
+2. Atomically claim each selected open ticket and set its ownership metadata in the same update:
+
+   ```bash
+   bd update <ticket-id> --claim --actor "orchestrate:<run-id>" \
+     --set-metadata "orchestration.run=<run-id>" \
+     --set-metadata "orchestration.branch=<branch>" \
+     --set-metadata "orchestration.worktree=<absolute-worktree-path>"
+   ```
+
+   A nonzero claim means another actor owns the ticket. Exclude that ticket from the wave and do not overwrite its assignee or metadata.
+3. Re-run `bd show <ticket-id> --json` after each claim. Require `in_progress` state, assignee `orchestrate:<run-id>`, and exact ownership metadata. Exclude the ticket when any check fails.
+4. Log one Deciduous decision with the selected wave, every exclusion and reason, and the ownership partition.
 
 ### 3. Fix the contracts before fan-out
 
@@ -96,7 +112,9 @@ Define in the task batch's shared context:
 - commit and result format; and
 - the rule that workers skip project-wide tests, linters, formatters, builds, and tracker mutation.
 
-Create one branch and worktree per ticket with `using-git-worktrees`. Name branches and worktrees from stable ticket IDs.
+Create one branch and worktree per newly claimed ticket with `using-git-worktrees`. Name them from stable ticket IDs. Reuse the verified recorded branch and worktree for each resumed ticket.
+
+Immediately before dispatch, re-run `bd show <ticket-id> --json` and inspect the assigned Git state. Require `in_progress` state, assignee `orchestrate:<run-id>`, exact ownership metadata, an existing recorded branch, and an existing recorded worktree with that branch checked out. Exclude the ticket when any check fails.
 
 Dispatch the complete wave in one parallel task batch. Each assignment must contain:
 
@@ -127,6 +145,8 @@ If no alternate provider is configured or the field-scoped routing queries are u
 
 For implementation failures, preserve useful work, record the failure on that ticket, and let independent siblings finish. Do not discard successful sibling commits because one worker failed.
 
+Log a Deciduous decision whenever provider availability materially changes a ticket's route or state. Record the ticket, failure class, chosen fallback or blocked path, and rationale without provider configuration or credentials.
+
 ### 5. Verify worker deliveries
 
 For each successful worker, independently confirm:
@@ -147,7 +167,8 @@ Use one integration owner and one integration branch.
 2. Apply worker commits one at a time in dependency and semantic order.
 3. Inspect the complete integrated diff after every commit.
 4. Resolve conflicts in the integration worktree. Treat a conflict or semantic collision as evidence of hidden coupling. Continue serial fan-in if the integration owner can satisfy both accepted contracts. Defer a ticket to a later wave only when it requires rework, and record the corrected ownership boundary.
-5. Never force-push over another contributor's work.
+5. Log each material coupling decision in Deciduous with the affected tickets, discovered boundary, chosen integration or deferral, and rationale.
+6. Never force-push over another contributor's work.
 
 A clean cherry-pick proves textual compatibility only.
 
@@ -157,17 +178,19 @@ After the full successful wave is assembled:
 
 1. Run every affected ticket's focused acceptance checks on the integrated tree.
 2. Exercise each changed observable surface with a behavioral smoke test.
-3. Run the repository-required tests, linters, builds, and review once on the combined revision through `verifying` or the repository's equivalent gate.
-4. If an integration fix, target-branch update, or new test changes code, restart this section against the new head.
-5. If two tickets interact only after fan-in, add or run the smallest durable test that protects that combined observable contract.
+3. If two tickets interact only after fan-in, add or run the smallest durable test that protects that combined observable contract.
+4. Require a clean integration worktree. Record the exact pre-gate `HEAD` SHA and Git tree.
+5. Invoke `verifying` without `--task` to run the repository-required tests, linters, builds, and review once on the combined revision. The verifier must not close any orchestration ticket.
+6. After `verifying`, require a clean integration worktree and compare both `HEAD` and the Git tree with the pre-gate values. If the SHA or tree changed for any reason, or the worktree became dirty, incorporate the change and restart all of Section 7.
+7. If any later integration fix, target-branch update, or new test changes code, restart all of Section 7 against the new head.
 
-After all checks pass, record the exact verified `HEAD` SHA and Git tree. Verification evidence belongs only to that code content.
+After all checks pass without a revision change, record the exact verified `HEAD` SHA and Git tree. Verification evidence belongs only to that code content.
 
 ### 8. Publish, reconcile, and clean up
 
-Use `finishing-a-development-branch` for the repository's normal merge, PR, or direct-push path. If this path creates or updates a GitHub PR, invoke `pr-review-loop`. Follow its timeout and clean-exit rules.
+Use `finishing-a-development-branch` to choose and execute the repository's normal merge, PR, or direct-push publication path, but postpone every branch and worktree cleanup step from that workflow. Publication and cleanup are separate phases here. Preserve the integration branch and worktree through PR review, exact published-head verification, and tracker reconciliation. If an external publication step removes either one, recreate an integration worktree at the published revision before continuing.
 
-If finishing, PR review, merge resolution, merge, publication, or a branch update changes code, return to Section 7 and record the new exact verified SHA before continuing.
+If the publication path creates or updates a GitHub PR, invoke `pr-review-loop` and follow its timeout and clean-exit rules. If finishing, PR review, merge resolution, merge, publication, or a branch update changes code, return to Section 7 and record the new exact verified SHA before continuing.
 
 After the verified revision is merged or otherwise published to the target branch:
 
@@ -177,8 +200,9 @@ After the verified revision is merged or otherwise published to the target branc
 4. Close only tickets represented by the final verified published revision.
 5. Leave failed, blocked, deferred, or omitted tickets open with exact state.
 6. Close a parent batch or epic last, only when all required children are closed.
-7. Remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
+7. Log a final Deciduous outcome with the run ID, published branch or PR, closed tickets, and tickets left open with reasons.
 8. Push tracker data and Git changes according to repository directives.
+9. Only after tracker reconciliation and its push, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
 
 ## Completion Report
 
