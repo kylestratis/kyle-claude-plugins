@@ -9,14 +9,14 @@ Add this repository to your marketplace and install the `documentation-review` p
 **Claude Code:**
 
 ```text
-/plugin marketplace add /Users/kyle/code/kyle-claude-plugins
+/plugin marketplace add <repository-path-or-URL>
 /plugin install documentation-review@kyle-claude-plugins
 ```
 
 **OMP:**
 
 ```text
-omp plugin marketplace add /Users/kyle/code/kyle-claude-plugins
+omp plugin marketplace add <repository-path-or-URL>
 omp plugin install --scope user documentation-review@kyle-claude-plugins
 ```
 
@@ -41,6 +41,14 @@ Once installed, use the `/documentation-review:review` command to start a docume
 ```text
 /documentation-review:review --path docs/design-plans --path scripts
 ```
+**Use a custom writing profile:**
+
+```text
+/documentation-review:review --profile <path=profile>
+```
+
+Repeated `--profile` flags allow you to apply multiple writing profiles in sequence.
+
 
 **Apply previously approved findings:**
 
@@ -60,7 +68,7 @@ By default, the review command scans changes in the current pull request. Use `-
 
 The `--path` flag narrows the review to specific directories or files. Provide multiple paths with repeated `--path` flags.
 
-The review process excludes binary files, generated artifacts, lock files, and compiled dependencies. Configuration and build output directories are also excluded by default.
+Default exclusions cover generated content, vendored dependencies, build output, dependency caches, minified files, lockfiles, tracking exports, and non-text files.
 
 ## Fix modes
 
@@ -74,7 +82,7 @@ The documentation review command supports three edit modes:
 
 ## Runtime status
 
-This plugin is designed for use with Claude Code and OMP. Both runtimes can install and discover the `/documentation-review:review` command through the repository's marketplace entry.
+This plugin is designed for use with Claude Code and OMP. Runtime verification is performed in Phase 4.
 
 ## Limitations
 

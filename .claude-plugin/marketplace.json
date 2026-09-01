@@ -50,8 +50,7 @@
                 "deciduous",
                 "tracking"
             ]
-        }
-        ,
+        },
         {
             "name": "documentation-review",
             "description": "Review repository prose with self-contained writing rules, evidence-backed findings, and controlled fixes",
