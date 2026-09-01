@@ -101,7 +101,7 @@ The references define detailed writing, profile, precedence, evidence, and fix-s
 
 ## Gate 3: Discover the complete scope
 
-Finish discovery and record every candidate disposition before reviewing prose. Use repository-relative paths and sort every disposition list by path.
+Approved-fix mode reuses the eligible snapshot's exact scope ledger and findings, skips new discovery and Gates 4-5, and proceeds to Gate 6. Review-only and autofix modes finish discovery and record every candidate disposition before reviewing prose. Use repository-relative paths and sort every disposition list by path.
 
 ### PR scope
 
@@ -197,3 +197,69 @@ Before reporting:
 5. Assign sequential stable IDs only after that final order.
 
 Default review-only mode creates the complete report and eligible review snapshot, then stops without calling `Edit` or changing any byte. The snapshot contains the exact consolidated records, evidence bytes, controlling source policy, scope, and path constraints. Report zero-finding reviewed regions and every protected span needed to demonstrate that lower-priority style rules did not create a false positive.
+
+## Gate 6: Select findings by edit mode
+
+Create exact outcome sets before the first edit:
+
+- `review-only`: select none. Record every proposed finding as skipped because edit mode was not selected.
+- `approved-fix`: use only the eligible immediately preceding snapshot. Select exactly the ordered `--apply-approved` IDs. A selected `safe` or `review-required` finding is eligible for editing. A selected `report-only` finding is rejected and skipped with the reason `report-only findings cannot be applied, even when selected`; preserve it and give a specific investigation or author-input recovery action. Mark every omitted finding skipped as `not selected`.
+- `autofix`: select every and only `safe` finding from the review completed in this invocation. Mark every `review-required` and `report-only` finding skipped with its safety class.
+
+Selection cannot change a finding's evidence, action, safety class, ID, source policy, scope, or path constraints. Approval is not evidence that protected text is safe to change, and autofix is not permission to apply a reasonable suggestion.
+
+## Gate 7: Verify and apply each selected edit
+
+Process selected findings in final finding order. Before each edit:
+
+1. Re-read the exact target region.
+2. Compare its current bytes with the snapshot evidence bytes. Equality is byte-for-byte, including whitespace and line endings; a partial, normalized, or relocated match fails.
+3. Re-check the proposed replacement against protected spans and every overlapping finding. If it changes protected content or replacements conflict, do not edit; record the exact conflict as unresolved.
+4. Apply one precise replacement to only the exact evidence region with the runtime's `Edit` tool. Never use shell text replacement, widen the target, search for similar text elsewhere, or overwrite a tool mismatch.
+5. Immediately record one terminal edit disposition: `applied`, `skipped`, or `failed`; also record `unresolved` when a stale target or conflict remains.
+
+If the bytes differ, mark only that finding `failed` and `unresolved: stale target`, quote both current and reviewed evidence, state that no edit was attempted, and continue with independent non-overlapping findings. If `Edit` rejects an exact target or returns an error, record that exact failure and continue independently. Keep successful edits applied; do not roll them back because a later target fails. Do not force, broaden, relocate, or reconstruct a failed replacement during the same invocation.
+
+## Gate 8: Second review and completion report
+
+After edit attempts, re-read every modified region. Review its current bytes again with its controlling directive, profile, writing rules, protected spans, and overlapping findings. Record one second-review result per modified region, including whether the replacement is exact, protected content is unchanged, and any new or remaining finding. A successful write without a completed second review is incomplete.
+
+Outcome rows are auditable sets: `Proposed` contains every snapshot finding; `Selected` contains the mode-selected IDs, including a selected report-only rejection; `Applied`, `Skipped`, and `Failed` are terminal edit dispositions; `Unresolved` flags conflicts, stale targets, or second-review issues and can overlap another row.
+
+Use this exact report shape:
+
+```markdown
+## Documentation Review <Complete|Incomplete>
+
+- Scope: <PR base OID | repository>
+- Path constraints: <list | none>
+- Mode: <review-only | approved-fix | autofix>
+- Reviewed files: <count and paths>
+- Excluded files: <counts by category and paths>
+- Unreadable files: <count and reasons>
+- Unsupported files or surfaces: <count and reasons>
+- Reviewed surfaces: <counts by profile>
+
+### Finding outcomes
+| Outcome | Count | Finding IDs |
+| --- | --- | --- |
+| Proposed | ... | ... |
+| Selected | ... | ... |
+| Applied | ... | ... |
+| Skipped | ... | ... |
+| Failed | ... | ... |
+| Unresolved | ... | ... |
+
+### Findings
+<ordered complete finding records>
+
+### Second review
+<one result per modified region, or "None; no region modified.">
+
+### Recovery
+<exact reason and one specific next action for every incomplete or rejected item, or "None.">
+```
+
+Use `Incomplete` when scope discovery stopped, any selected edit failed, any target was stale, any replacement conflict remains, or any required second review did not complete. Never call these states clean, successful, or complete. A selected report-only finding that is correctly rejected remains a skipped item rather than a failed edit, but its recovery entry must say which missing facts or investigation are required.
+
+Before returning, reconcile every candidate and finding against the scope ledger, snapshot, outcome rows, second reviews, and recovery entries. Every proposed finding must appear in the report. Every modified region must have a second review. Every incomplete item must name the exact reason and a specific action that creates valid new evidence or resolves the failure.

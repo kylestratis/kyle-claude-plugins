@@ -697,3 +697,102 @@ Observed hashes:
 | `src/widget.py` | `021331ece227a6468f2c78a6918a091b8ce4b213cae5883432f31fb074500c46` | `021331ece227a6468f2c78a6918a091b8ce4b213cae5883432f31fb074500c46` |
 
 **Result:** PASS for the Task 4 portions of `documentation-review.AC5.1` and `documentation-review.AC5.6`. The response preserved review-only bytes and every protected token, created the snapshot, and correctly left Task 5 completion-table fields pending.
+
+## GREEN: Task 5 safe fixes, recovery, and reporting
+
+Each evaluation was a fresh non-interactive `omp -p` session with `--no-tools --no-skills --no-rules --no-extensions --no-session`. The CLI resolved `--model gpt-5.4-mini` to provider `openai-codex`, model `gpt-5.4-mini`. Each session received only the completed skill, its three policy references, one workflow scenario, and the scenario-specific prompt. All transcript actions were simulated observations. No subagent ran. Skill SHA-256: `a48c4cd1e7c393a19caadeb582e5f2baf97feac745ab757598691716ad413c95`.
+
+The common prompt required the exact Gate 8 report, complete findings, exact outcome sets, byte comparisons, protected-span results, second reviews, recovery, and PASS or FAIL for every mapped criterion. Each prompt named one attached scenario and instructed the agent to treat its snapshot, `Read`, `Edit`, directive, and hash transcript lines as the only simulated observed results.
+
+### Observed scenario matrix
+
+| Scenario | Proposed | Selected | Applied | Skipped | Failed | Unresolved | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `default-review` | DR-001, DR-002 | none | none | DR-001, DR-002 | none | none | Complete |
+| `approved-fix` | DR-001, DR-002, DR-003 | DR-001, DR-003 | DR-001 | DR-002 not selected; DR-003 report-only | none | none | Complete |
+| `autofix` | DR-001, DR-002, DR-003 | DR-001 | DR-001 | DR-002 review-required; DR-003 report-only | none | none | Complete |
+| `stale-target` | DR-001 | DR-001 | none | none | DR-001 | DR-001 stale | Incomplete |
+| `partial-failure` | DR-001, DR-002 | DR-001, DR-002 | DR-001 | none | DR-002 | DR-002 stale | Incomplete |
+
+### GREEN-T5-1: Default review
+
+**Prompt:**
+
+```text
+Run the attached default-review scenario with the attached completed skill as controlling policy. Treat all tool transcript and hash lines as simulated observed results; do not call tools or dispatch subagents. Produce the exact Gate 8 completion report with complete findings, outcomes, second review, recovery, protected-span result, and before/after hashes. Return PASS or FAIL for each mapped acceptance criterion and identify any mismatch.
+```
+
+**Observed result:** `Documentation Review Complete`; no edits; two complete ordered findings; `Selected 0`, `Applied 0`, `Skipped 2`; second review `None; no region modified.`; recovery none. Protected commands, literals, identifiers, and types were unchanged. Both before and after hash pairs were identical:
+
+- `docs/guide.md`: `318fbfa61c5f71a6c938ec006fd14abe9c0b9791bd46bde384f7562b6c45bbdc`
+- `src/widget.py`: `021331ece227a6468f2c78a6918a091b8ce4b213cae5883432f31fb074500c46`
+
+The response returned PASS for `documentation-review.AC5.1` and `documentation-review.AC5.6`, with no mismatch.
+
+### GREEN-T5-2: Approved fix
+
+**Prompt:**
+
+```text
+Run the attached approved-fix scenario with the attached completed skill as controlling policy. Treat all snapshot, Read, and Edit transcript lines as simulated observed results in one current conversation; do not call tools or dispatch subagents. Produce the exact Gate 8 completion report, including every original finding, exact outcome sets, byte checks, protected result, second review, and recovery. Return PASS or FAIL for each mapped acceptance criterion and identify any mismatch.
+```
+
+**Observed result:** Only selected review-required `DR-001` changed to `Use the consumer for queue jobs.` Omitted `DR-002` stayed unchanged. Selected report-only `DR-003` was rejected without changing `OPS-431`. The modified region passed a second review with no new or remaining finding. The exact observed recovery entry was:
+
+```text
+DR-003 skipped: report-only findings cannot be applied, even when selected. Recovery: investigate OPS-431 and supply the missing durable rationale in a new review; do not invent or remove provenance.
+```
+
+The response returned PASS for `documentation-review.AC5.2`, `documentation-review.AC5.4`, and `documentation-review.AC5.6`, with no mismatch.
+
+### GREEN-T5-3: Autofix
+
+**Prompt:**
+
+```text
+Run the attached autofix scenario with the attached completed skill as controlling policy. Treat all directive, snapshot, Read, and Edit transcript lines as simulated observed results; do not call tools or dispatch subagents. Produce the exact Gate 8 completion report with complete findings, exact outcome sets, byte checks, protected-span comparison, second review, and recovery. Return PASS or FAIL for each mapped acceptance criterion and identify any mismatch.
+```
+
+**Observed result:** The response selected only policy-supplied safe `DR-001` and changed only `teh` to `the`. Review-required `DR-002` and report-only `DR-003` stayed unchanged. The URL `https://status.example.test/app` and provenance `OPS-431` were unchanged. The modified region passed its second review with no new finding.
+
+The response returned PASS for `documentation-review.AC5.3`, `documentation-review.AC5.4`, and `documentation-review.AC5.6`, with no mismatch.
+
+### GREEN-T5-4: Stale target
+
+**Prompt:**
+
+```text
+Run the attached stale-target scenario with the attached completed skill as controlling policy. Treat all snapshot and Read transcript lines as simulated observed results in one current conversation; do not call tools or dispatch subagents. Produce the exact Gate 8 completion report with complete finding, exact outcome sets, byte comparison, edit calls, second review, and exact recovery. Return PASS or FAIL for each mapped acceptance criterion and identify any mismatch.
+```
+
+**Observed result:** `Documentation Review Incomplete`; `DR-001` failed and remained unresolved. The response identified the byte mismatch at offset 19, attempted no edit, preserved `Use the worker for urgent queue jobs.`, and recorded no second review because no region changed. Its recovery was:
+
+```text
+DR-001 failed: stale target at docs/guide.md:3. The current region differs byte-for-byte from the reviewed evidence (current: "Use the worker for urgent queue jobs."; reviewed: "Use the worker for queue jobs."). No edit was attempted.
+Recovery: run a new review-only invocation against the current file, inspect the new finding and evidence, then approve the new finding ID if the replacement is still correct.
+```
+
+The response returned PASS for `documentation-review.AC6.4` and `documentation-review.AC5.2`. The only reported mismatch was the injected stale-target byte difference itself.
+
+### GREEN-T5-5: Partial failure
+
+**Prompt:**
+
+```text
+Run the attached partial-failure scenario with the attached completed skill as controlling policy. Treat all directive, snapshot, Read, and Edit transcript lines as simulated observed results; do not call tools or dispatch subagents. Produce the exact Gate 8 completion report with complete findings, exact outcome sets, byte comparisons, retained successful edit, second review, and exact recovery. Return PASS or FAIL for each mapped acceptance criterion and identify any mismatch.
+```
+
+**Observed result:** `Documentation Review Incomplete`; both safe findings were selected. `DR-001` matched, changed to `Open the dashboard.`, passed a second review, and remained applied. `DR-002` did not match, received no Edit call, failed as stale, and remained unresolved. The concurrent text `Close teh production dashboard.` remained unchanged.
+
+The supplied snapshot intentionally omitted `rule`, `severity`, `profile`, and `reason`; the response identified those absent fields instead of inventing policy metadata. Its exact recovery block was:
+
+```text
+Documentation Review Incomplete
+DR-001 applied and passed second review at docs/a.md:3.
+DR-002 failed: stale target at docs/b.md:4. Current evidence "Close teh production dashboard." differs from reviewed evidence "Close teh dashboard." No edit was attempted, and DR-001 remains applied.
+Recovery: run a new review-only invocation for docs/b.md, inspect the new evidence, then run autofix again only if the new finding is safe.
+```
+
+The response returned PASS for `documentation-review.AC6.3`, `documentation-review.AC6.4`, and `documentation-review.AC6.5`, with no mismatch.
+
+**Task 5 result:** PASS for all five required workflow scenarios. Selection boundaries were exact, review-only changed no bytes, protected and stale content remained unchanged, every applied edit had a second review, independent success survived failure, and every incomplete item had an exact reason and recovery action.
