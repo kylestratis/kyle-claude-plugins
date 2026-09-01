@@ -18,22 +18,69 @@ In desperate search of a name that doesn't suck.
 
 ### 1. Register the marketplace
 
+Claude Code:
+
 ```bash
-/plugin marketplace add kyle-claude-plugins
+/plugin marketplace add kylestratis/kyle-claude-plugins
 ```
 
+OMP:
+
+```bash
+omp plugin marketplace add kylestratis/kyle-claude-plugins
+```
+
+Use a local path instead of the repository slug to install from a working tree:
+`add /path/to/kyle-claude-plugins`. Installs then resolve from that checkout,
+including uncommitted changes.
+
 ### 2. Install plugins
+
+The tracking hooks need their scripts executable before installation:
+
+```bash
+chmod +x plugins/tracking-hooks/hooks/*.sh plugins/tracking-hooks/hooks/*.py
+```
+
+Claude Code:
 
 ```bash
 # Workflow commands (required)
 /plugin install workflow-commands@kyle-claude-plugins
 
 # Tracking hooks (optional - session start reminders, git hooks)
-chmod +x ~/code/kyle-claude-plugins/plugins/tracking-hooks/hooks/*.sh
-chmod +x ~/code/kyle-claude-plugins/plugins/tracking-hooks/hooks/*.py
 /plugin install tracking-hooks@kyle-claude-plugins
 
 # Documentation review (optional - prose review with controlled fixes)
+/plugin install documentation-review@kyle-claude-plugins
+```
+
+OMP:
+
+```bash
+omp plugin install --scope user workflow-commands@kyle-claude-plugins
+omp plugin install --scope user tracking-hooks@kyle-claude-plugins
+omp plugin install --scope user documentation-review@kyle-claude-plugins
+```
+
+Use `--scope project` to install for one repository instead of your user account.
+
+### 3. Load the plugins
+
+Run `/reload-plugins` in either runtime, or start a new session.
+
+### Updating
+
+OMP upgrades in place. Claude Code pins each install to a commit, so reinstall
+to pick up new commits:
+
+```bash
+# OMP
+omp plugin upgrade documentation-review@kyle-claude-plugins
+
+# Claude Code
+/plugin marketplace update kyle-claude-plugins
+/plugin uninstall documentation-review@kyle-claude-plugins
 /plugin install documentation-review@kyle-claude-plugins
 ```
 
