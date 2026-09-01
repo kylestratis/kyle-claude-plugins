@@ -1,5 +1,15 @@
 # Changelog
 
+## workflow-commands 0.8.0
+
+Coordinate independent Beads tickets with isolated workers, serial integration, and combined verification.
+
+**New:**
+- Added `/workflow-commands:orchestrate` and the `orchestrating-beads-tickets` skill
+- Selects ready tickets with non-overlapping write sets, gives each active ticket one worktree, and preserves hard dependency order
+- Retries provider infrastructure failures through configured alternate providers without treating them as ticket failures
+- Verifies the combined revision before publishing changes or closing represented tickets
+
 ## workflow-commands 0.7.0
 
 Add automated remediation for GitHub Codex Review findings.

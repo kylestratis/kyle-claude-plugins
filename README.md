@@ -537,6 +537,22 @@ Resume work on an existing beads task.
 ```
 
 ---
+### `/workflow-commands:orchestrate`
+
+Coordinate independent ready Beads tickets in isolated worktrees.
+
+```bash
+/workflow-commands:orchestrate [<ticket-id> ...] [--max-parallel <count>]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<ticket-id>` | Restrict the candidate set to specific Beads tickets |
+| `--max-parallel <count>` | Limit concurrent workers; defaults to 4 |
+
+Without ticket IDs, the workflow starts from `bd ready`. It excludes overlapping or dependent tickets from the wave, integrates worker commits one at a time, and closes tickets only after the combined revision is verified and published.
+
+---
 
 ### `/documentation-review:review`
 
@@ -604,6 +620,7 @@ provenance — is never rewritten.
 | `/workflow-commands:task` | Small standalone work (<1hr) | Single task |
 | `/workflow-commands:bug` | Fix a bug | Bug |
 | `/workflow-commands:continue` | Resume existing work | Nothing (uses existing) |
+| `/workflow-commands:orchestrate` | Run independent ready tickets concurrently | Nothing (uses existing) |
 | `/workflow-commands:explore` | Research before design | Research task |
 | `/workflow-commands:intake` | Import roadmap | Epics |
 | `/workflow-commands:pollinate` | Port a feature from another codebase | Design document |
@@ -643,6 +660,17 @@ provenance — is never rewritten.
     ▼                                           │
 git commit / PR ────────────────────────────────┘
 ```
+
+### Parallel Ticket Workflow
+
+For existing ready tickets with disjoint ownership:
+
+```bash
+/workflow-commands:orchestrate beads-a1b2 beads-c3d4 --max-parallel 2
+# isolated workers → serial integration → combined verification → publish → close
+```
+
+Dependent, overlapping, failed, or unverified tickets remain open for a later wave.
 
 ### Quick Task Workflow
 
@@ -828,7 +856,8 @@ kyle-claude-plugins/
 │   │   │   ├── fix-pr-review.md
 │   │   │   ├── task.md          # NEW
 │   │   │   ├── bug.md           # NEW
-│   │   │   └── continue.md      # NEW
+│   │   │   ├── continue.md
+│   │   │   └── orchestrate.md
 │   │   └── skills/
 │   │       ├── project-init/SKILL.md
 │   │       ├── intake/SKILL.md
@@ -841,6 +870,7 @@ kyle-claude-plugins/
 │   │       ├── task/SKILL.md              # NEW
 │   │       ├── bug/SKILL.md               # NEW
 │   │       ├── continue/SKILL.md          # NEW
+│   │       ├── orchestrating-beads-tickets/SKILL.md
 │   │       └── beads-deciduous-integration/SKILL.md
 │   └── tracking-hooks/
 │       ├── .claude-plugin/plugin.json

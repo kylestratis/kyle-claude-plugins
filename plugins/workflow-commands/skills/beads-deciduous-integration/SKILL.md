@@ -85,6 +85,7 @@ deciduous add action "Implemented <feature>" --commit HEAD
 | `/workflow-commands:task` | Small standalone work (<1 hour) |
 | `/workflow-commands:bug` | Fix a bug |
 | `/workflow-commands:continue` | Resume existing work |
+| `/workflow-commands:orchestrate` | Coordinate independent ready tickets in parallel |
 
 ## Full Workflow (Large Features)
 
