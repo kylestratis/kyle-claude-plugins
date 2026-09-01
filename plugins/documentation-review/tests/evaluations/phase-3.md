@@ -242,3 +242,216 @@ Four genuine RED sessions exposed failures without skill content:
 - RED-6 edited in the default review-only mode and changed directive-controlled, quoted, and provenance text.
 
 The GREEN skill must validate the complete argument string before tools, preserve the review-only default, respect higher-priority directives and protected text, require byte-exact target evidence, and limit coverage claims to observed surfaces.
+
+## GREEN: Argument validation
+
+**Provider:** `openai-codex`
+
+**Model:** `gpt-5.4-mini`
+
+**Skill version:** SHA-256 `ff6240dd299c7bd3b9c3fb43f3c5ad4b3258fab70150f3b87da677d7180b1a12`
+
+**Session conditions:** Fresh non-interactive `omp -p` session with `--no-skills --no-rules --no-extensions --no-session`. The current `SKILL.md` and `workflow/arguments/scenario.md` were supplied verbatim as file inputs. No subagent ran.
+
+**Prompt:**
+
+```text
+[Verbatim file input: plugins/documentation-review/skills/reviewing-documentation/SKILL.md]
+[Verbatim file input: plugins/documentation-review/tests/fixtures/workflow/arguments/scenario.md]
+
+Run the attached workflow/arguments behavioral scenario with the attached reviewing-documentation skill as the controlling instruction. Evaluate each invocation independently and execute only the argument validation gate. For the valid case, report the exact routed string, resolved values, ordered repeated values, mode, and validation status, then stop before scope discovery because this evaluation covers only AC1.3 and AC1.4. For every invalid case, list all errors from that invocation, print the complete grammar and required stop/recovery output, and report every tool call made. Do not dispatch subagents. End with a pass or fail result for AC1.3 and AC1.4 based only on your observable response.
+```
+
+**Response:**
+
+````text
+Invocation 1
+- validation: valid
+- scope: repository
+- path_constraints: [docs/guide.md, src/widget.py]
+- profile_overrides: [docs/guide.md=procedure, src/widget.py=docstring]
+- mode: review-only
+- routed_argument_string: `--scope repository --path docs/guide.md --path src/widget.py --profile docs/guide.md=procedure --profile src/widget.py=docstring`
+- observable result: accepted by argument gate
+- scope discovery: not performed, per instruction
+
+Invocation 2
+- validation: invalid
+- invalid_arguments:
+  - `README.md`: positional value is not allowed
+  - `--mystery`: unknown flag
+  - `yes`: positional value is not allowed
+- valid_grammar:
+```text
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+```
+- tools_called: none
+- status: stopped before discovery
+```text
+Argument validation failed:
+- README.md: positional value is not allowed
+- --mystery: unknown flag
+- yes: positional value is not allowed
+Valid grammar:
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+Stopped before git discovery, file reads, or edits. Correct every listed argument and run the review again.
+```
+
+Invocation 3
+- validation: invalid
+- invalid_arguments:
+  - `--path`: missing value
+  - `--profile`: missing value
+  - `--apply-approved`: missing value
+- valid_grammar:
+```text
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+```
+- tools_called: none
+- status: stopped before discovery
+```text
+Argument validation failed:
+- --path: missing value
+- --profile: missing value
+- --apply-approved: missing value
+Valid grammar:
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+Stopped before git discovery, file reads, or edits. Correct every listed argument and run the review again.
+```
+
+Invocation 4
+- validation: invalid
+- invalid_arguments:
+  - `--scope branch`: invalid scope value; allowed values are `pr` or `repository`
+  - `--profile docs/guide.md=tutorial`: invalid profile value; allowed values are `general`, `documentation`, `procedure`, `prompt`, `docstring`, `comment`, or `historical-record`
+- valid_grammar:
+```text
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+```
+- tools_called: none
+- status: stopped before discovery
+```text
+Argument validation failed:
+- --scope branch: invalid scope value; allowed values are pr or repository
+- --profile docs/guide.md=tutorial: invalid profile value; allowed values are general, documentation, procedure, prompt, docstring, comment, or historical-record
+Valid grammar:
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+Stopped before git discovery, file reads, or edits. Correct every listed argument and run the review again.
+```
+
+Invocation 5
+- validation: invalid
+- invalid_arguments:
+  - `--path ../private.txt`: path contains `..` component and is outside the repository
+  - `--profile /tmp/note.md=comment`: path is absolute and outside the repository
+- valid_grammar:
+```text
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+```
+- tools_called: none
+- status: stopped before discovery
+```text
+Argument validation failed:
+- --path ../private.txt: path contains .. component and is outside the repository
+- --profile /tmp/note.md=comment: path is absolute and outside the repository
+Valid grammar:
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+Stopped before git discovery, file reads, or edits. Correct every listed argument and run the review again.
+```
+
+Invocation 6
+- validation: invalid
+- invalid_arguments:
+  - `--autofix`: contradictory with `--apply-approved`
+  - `--apply-approved DR-002`: contradictory with `--autofix`
+  - `--apply-approved DR-004`: contradictory with `--autofix`
+- valid_grammar:
+```text
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+```
+- tools_called: none
+- status: stopped before discovery
+```text
+Argument validation failed:
+- --autofix: contradictory with --apply-approved
+- --apply-approved DR-002: contradictory with --autofix
+- --apply-approved DR-004: contradictory with --autofix
+Valid grammar:
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+Stopped before git discovery, file reads, or edits. Correct every listed argument and run the review again.
+```
+
+Invocation 7
+- validation: invalid
+- invalid_arguments:
+  - `--apply-approved DR-001`: no matching review snapshot exists in the current conversation. Run a review-only invocation first, then approve an ID from that immediately preceding snapshot.
+- valid_grammar:
+```text
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+```
+- tools_called: none
+- status: stopped before discovery
+```text
+Argument validation failed:
+- --apply-approved DR-001: no matching review snapshot exists in the current conversation. Run a review-only invocation first, then approve an ID from that immediately preceding snapshot.
+Valid grammar:
+[--scope pr|repository]
+[--path <repository-relative-path>]...
+[--profile <repository-relative-path>=general|documentation|procedure|prompt|docstring|comment|historical-record]...
+[--apply-approved <finding-id>]...
+[--autofix]
+Stopped before git discovery, file reads, or edits. Correct every listed argument and run the review again.
+```
+
+Result
+- AC1.3: pass
+- AC1.4: pass
+````
+
+**Observable actions:** The valid invocation preserved the exact routed string, both path values, both profile mappings, and the review-only default. All six invalid invocations accumulated their errors and reported `tools_called: none` plus `status: stopped before discovery`.
+
+**Result:** PASS for `documentation-review.AC1.3` and `documentation-review.AC1.4`.
