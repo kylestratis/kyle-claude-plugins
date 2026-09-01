@@ -1,5 +1,13 @@
 [
   {
+    "hash": "1772427623160da044a20f10de78fbcf480bdd6f",
+    "short_hash": "1772427",
+    "author": "Kyle Stratis",
+    "date": "2026-08-31T18:01:36-04:00",
+    "message": "feat: add Codex PR review remediation loop",
+    "files_changed": 11
+  },
+  {
     "hash": "8a0b3fc304d2ae76cb0a1952c8b682cad8366334",
     "short_hash": "8a0b3fc",
     "author": "Kyle Stratis",

@@ -98,7 +98,7 @@ Explicit paths can narrow either scope. The skill applies path constraints befor
 
 Eligible prose includes human-readable documentation, skill and agent instructions, command prompts, docstrings, and code comments. Detection is language-agnostic and best-effort. The report identifies the files and text surfaces that the skill reviewed. It does not claim complete parser coverage for all programming languages.
 
-The plugin owns its writing rules. It does not require or invoke an external STE plugin. Reference files under `skills/reviewing-documentation/references/` define controlled-language guidance, evergreen prose, text-surface profiles, exclusions, finding severities, and fix safety.
+The plugin owns its writing rules. It does not require or invoke an external STE plugin. Reference files under `skills/reviewing-documentation/references/` define controlled-language guidance, evergreen prose, text-surface profiles, finding severities, and fix safety. `SKILL.md` defines operational exclusions as part of scope discovery.
 
 Applicable repository and directory-specific writing directives take precedence over bundled writing rules. Explicit invocation overrides come next, followed by the selected text-surface profile and general guidance. Technical correctness and quoted-source fidelity are safety constraints and cannot be overridden by style policy.
 
@@ -175,7 +175,7 @@ The repository has no established documentation exclusion system, safe prose-aut
 
 **Dependencies:** Phase 1.
 
-**Done when:** Each rule has a stable identifier, applicability, evidence requirement, and fix-safety default. Fixtures cover repository-rule precedence, necessary historical provenance, technical terms, quoted text, ticket-only explanations, repetitive comments, and contract-poor docstrings. Reviews of the fixtures satisfy `documentation-review.AC2`, `documentation-review.AC3`, and `documentation-review.AC4`.
+**Done when:** Each rule has a stable identifier, applicability, evidence requirement, and fix-safety default. Structurally correct fixtures cover repository-rule precedence, necessary historical provenance, technical terms, quoted text, ticket-only explanations, repetitive comments, and contract-poor docstrings for `documentation-review.AC3` and `documentation-review.AC4`. Phase 3 runs the skill against scope and policy fixtures to satisfy `documentation-review.AC2` through `documentation-review.AC4`.
 <!-- END_PHASE_2 -->
 
 <!-- START_PHASE_3 -->
