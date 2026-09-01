@@ -82,7 +82,7 @@ The documentation review command supports three edit modes:
 
 ## Runtime status
 
-This plugin is designed for use with Claude Code and OMP. Runtime verification is performed in Phase 4.
+Claude Code and OMP are the supported runtimes. Installation, command discovery, and a repository-scope review-only run were verified on Claude Code 2.1.252 and OMP 18.0.11.
 
 ## Limitations
 
