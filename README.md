@@ -32,6 +32,9 @@ In desperate search of a name that doesn't suck.
 chmod +x ~/code/kyle-claude-plugins/plugins/tracking-hooks/hooks/*.sh
 chmod +x ~/code/kyle-claude-plugins/plugins/tracking-hooks/hooks/*.py
 /plugin install tracking-hooks@kyle-claude-plugins
+
+# Documentation review (optional - prose review with controlled fixes)
+/plugin install documentation-review@kyle-claude-plugins
 ```
 
 ---
@@ -369,6 +372,50 @@ GitHub PR interface.
 
 ---
 
+### `/workflow-commands:pollinate`
+
+Port a feature from another codebase into the current project.
+
+```bash
+/workflow-commands:pollinate <source-path-or-url> <feature> [--rigor critical]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<source-path-or-url>` | Local path or URL of the source codebase |
+| `<feature>` | Feature to port |
+| `--rigor critical` | Raise verification rigor for high-risk ports |
+
+Analyzes the source feature, maps it to this project's conventions, and generates
+a design document. It does **not** write code directly — it feeds the standard
+`/plan` → `/execute` → `/verify` pipeline.
+
+**Examples:**
+```bash
+/workflow-commands:pollinate ../other-repo "retry middleware"
+/workflow-commands:pollinate https://github.com/owner/repo "token refresh" --rigor critical
+```
+
+---
+
+### `/workflow-commands:pollinate-verify`
+
+Three-layer verification for ported code.
+
+```bash
+/workflow-commands:pollinate-verify [--task <beads-id>] [--source <path>]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--task` | Beads task to close on success |
+| `--source` | Source codebase to compare against |
+
+Runs after `/execute` completes a pollination port: differential tests against the
+source, adversarial hardening, then standard project verification.
+
+---
+
 
 ### `/workflow-commands:task`
 
@@ -444,6 +491,63 @@ Resume work on an existing beads task.
 
 ---
 
+### `/documentation-review:review`
+
+Review repository documentation, prompts, docstrings, and comments against
+evidence-backed writing rules.
+
+```bash
+/documentation-review:review [--scope pr|repository] [--path <path> ...] \
+                             [--profile <path>=<profile> ...] \
+                             [--apply-approved <finding-id> ... | --autofix]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--scope` | `pr` (default) reviews prose changed from the verified PR base; `repository` reviews all eligible prose |
+| `--path` | Repeated, repository-relative; narrows either scope. Cannot re-include excluded content |
+| `--profile` | Repeated `<path>=<profile>`; overrides content classification |
+| `--apply-approved` | Repeated `DR-###` IDs from the immediately preceding review in this conversation |
+| `--autofix` | Applies all and only `safe` findings. Mutually exclusive with `--apply-approved` |
+
+**Profiles:** `general`, `documentation`, `procedure`, `prompt`, `docstring`,
+`comment`, `historical-record`.
+
+**Fix safety classes:**
+
+| Class | Behavior |
+|-------|----------|
+| `safe` | Applied by `--autofix` or when approved |
+| `review-required` | Applied only when explicitly approved by ID |
+| `report-only` | Never applied automatically, even when selected |
+
+Default invocation modifies no files: it reports findings and creates a review
+snapshot that `--apply-approved` consumes. Every edit re-reads its target and
+requires byte-for-byte equality with the reviewed evidence, so a concurrently
+changed target stops that edit alone and reports a recovery action. Protected
+content — commands, identifiers, literals, URLs, quoted text, and necessary
+provenance — is never rewritten.
+
+**Examples:**
+```bash
+# Review prose changed in the current PR
+/documentation-review:review
+
+# Review the whole repository, narrowed to two paths
+/documentation-review:review --scope repository --path README.md --path docs/
+
+# Treat a file as a procedure regardless of content classification
+/documentation-review:review --profile docs/deploy.md=procedure
+
+# Apply two approved findings from the preceding review
+/documentation-review:review --apply-approved DR-001 --apply-approved DR-004
+
+# Apply only findings classified safe
+/documentation-review:review --scope repository --autofix
+```
+
+---
+
 ## Entry Points
 
 | Start From | When to Use | Creates |
@@ -455,6 +559,8 @@ Resume work on an existing beads task.
 | `/workflow-commands:continue` | Resume existing work | Nothing (uses existing) |
 | `/workflow-commands:explore` | Research before design | Research task |
 | `/workflow-commands:intake` | Import roadmap | Epics |
+| `/workflow-commands:pollinate` | Port a feature from another codebase | Design document |
+| `/documentation-review:review` | Review prose before commit or PR | Nothing (report + review snapshot) |
 
 ---
 
