@@ -51,7 +51,7 @@ Deadline, sunk-cost, or authority pressure does not weaken these invariants. Red
 2. Invoke `beads-deciduous-integration` for canonical tracker semantics.
 3. Record the current target branch and preserve unrelated changes.
 4. Refresh the target branch before creating worker branches.
-5. Read provider routing without exposing credentials. In OMP, inspect `retry.modelFallback` and `retry.fallbackChains`.
+5. Inspect OMP provider routing only with `omp config get retry.modelFallback` and `omp config get retry.fallbackChains`. Never read the full OMP config, dump the environment, or read credential files. If either field-scoped query is unavailable or fails, treat alternate routing as unavailable and use the blocked path in Section 4.
 
 If the current worktree contains unrelated changes, keep integration in a separate worktree.
 
@@ -60,20 +60,29 @@ If the current worktree contains unrelated changes, keep integration in a separa
 For each candidate:
 
 1. Run `bd show <ticket-id> --json`.
-2. Require an open or in-progress ticket with no unresolved hard blocker.
-3. Read its description, acceptance criteria, dependencies, comments, and referenced code.
-4. Determine the smallest credible write set and verification surface.
+2. Require an open ticket, or an in-progress ticket that a ticket-to-branch/worktree record proves belongs to this orchestration. Status alone is not ownership proof; reject every other in-progress ticket.
+3. Require a leaf implementation ticket with no unresolved hard blocker. Exclude epics, parent batches, and parents with required open children; reconcile these containers in Section 8.
+4. Read its description, acceptance criteria, dependencies, parent-child relationships, comments, and referenced code.
+5. Determine the smallest credible write set and verification surface.
 
 Classify every pair:
 
 | Relationship | Action |
 |---|---|
 | Hard dependency | Run in separate waves, blocker first |
+| Parent-child relationship | Dispatch required leaf children first; treat the parent as a reconciliation dependency, not worker implementation |
 | Overlapping file, symbol, schema, migration, or observable workflow | Serialize unless the write sets can be partitioned before dispatch |
 | Unknown write set | Investigate before dispatch; serialize if it remains unknown |
 | Non-overlapping write sets and no dependency | Eligible for the same wave |
 
 Do not dispatch inspection-only workers or invent work to fill `--max-parallel`.
+
+After selecting the wave and before creating worktrees:
+
+1. Create a unique orchestration run ID, then assign stable branch and worktree names to every selected ticket.
+2. Claim each selected open ticket with `bd update <ticket-id> --status in_progress`.
+3. Record the run ID and each ticket-to-branch/worktree mapping in coordinator state and on the ticket as this orchestration's ownership evidence. Resume an in-progress ticket only when its prior record has the same run ID and its branch/worktree state still matches.
+4. Re-run `bd show <ticket-id> --json` immediately before dispatch. Require `in_progress` state and the matching ownership record; exclude a ticket when either check fails.
 
 ### 3. Fix the contracts before fan-out
 
@@ -106,14 +115,15 @@ A worker implements and commits its ticket directly. It does not dispatch subage
 
 ### 4. Handle worker and provider failures
 
-A provider error before the worker reads or edits the ticket is infrastructure failure, not ticket failure.
+Classify failure by cause, not by when it occurs. A rate limit, timeout, provider outage, or other provider infrastructure error at any stage is provider failure, even after useful work exists.
 
-1. Keep the ticket open.
-2. Retry the same assignment through a configured alternate provider.
-3. Prefer existing fallback chains. If an explicit override is required, use the narrowest task or session scope and restore the prior route after the batch.
-4. Never read, print, or place provider credentials in prompts, logs, URLs, or command arguments.
+1. Keep the ticket open and preserve its assigned branch and worktree.
+2. Inspect that worktree and preserve useful commits and uncommitted changes.
+3. When useful state exists, resume the same assignment in the same worktree through a configured alternate provider. Start a fresh retry only when inspection proves that the worktree has no useful state.
+4. Prefer existing fallback chains. If an explicit override is required, use the narrowest task or session scope and restore the prior route after the batch.
+5. Use only the field-scoped routing queries from Section 1. Never read, print, or place provider credentials in prompts, logs, URLs, or command arguments.
 
-If no alternate provider is configured, mark the ticket blocked with the exact infrastructure reason and continue independent successful tickets. Never describe the full batch as complete.
+If no alternate provider is configured or the field-scoped routing queries are unavailable, mark the ticket blocked with the exact infrastructure reason and continue independent successful tickets. Never describe the full batch as complete.
 
 For implementation failures, preserve useful work, record the failure on that ticket, and let independent siblings finish. Do not discard successful sibling commits because one worker failed.
 
@@ -148,23 +158,27 @@ After the full successful wave is assembled:
 1. Run every affected ticket's focused acceptance checks on the integrated tree.
 2. Exercise each changed observable surface with a behavioral smoke test.
 3. Run the repository-required tests, linters, builds, and review once on the combined revision through `verifying` or the repository's equivalent gate.
-4. Re-run affected checks after any integration fix or target-branch update.
+4. If an integration fix, target-branch update, or new test changes code, restart this section against the new head.
+5. If two tickets interact only after fan-in, add or run the smallest durable test that protects that combined observable contract.
 
-If two tickets interact only after fan-in, add or run the smallest durable test that protects that combined observable contract.
+After all checks pass, record the exact verified `HEAD` SHA and Git tree. Verification evidence belongs only to that code content.
 
 ### 8. Publish, reconcile, and clean up
 
 Use `finishing-a-development-branch` for the repository's normal merge, PR, or direct-push path. If this path creates or updates a GitHub PR, invoke `pr-review-loop`. Follow its timeout and clean-exit rules.
 
+If finishing, PR review, merge resolution, merge, publication, or a branch update changes code, return to Section 7 and record the new exact verified SHA before continuing.
+
 After the verified revision is merged or otherwise published to the target branch:
 
-1. Confirm the published revision contains each accepted worker change.
-2. Comment on each ticket with the commit or PR and verification evidence.
-3. Close only tickets represented by the published revision.
-4. Leave failed, blocked, deferred, or omitted tickets open with exact state.
-5. Close a parent batch or epic last, only when all required children are closed.
-6. Remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
-7. Push tracker data and Git changes according to repository directives.
+1. Resolve the published target SHA and confirm that it contains each accepted worker change.
+2. Before tracker mutation, require the published SHA to equal the recorded verified SHA, or to contain it with an identical Git tree. If the published tree differs, run Section 7 on that exact published revision and record its SHA.
+3. Comment on each ticket with the commit or PR and verification evidence.
+4. Close only tickets represented by the final verified published revision.
+5. Leave failed, blocked, deferred, or omitted tickets open with exact state.
+6. Close a parent batch or epic last, only when all required children are closed.
+7. Remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
+8. Push tracker data and Git changes according to repository directives.
 
 ## Completion Report
 
