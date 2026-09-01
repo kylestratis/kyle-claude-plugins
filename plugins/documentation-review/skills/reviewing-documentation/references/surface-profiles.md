@@ -4,6 +4,31 @@
 
 Text-surface profiles classify prose by its context and function, enabling rules to be applied with appropriate emphasis and protection. Each profile defines which writing rules apply, what content must be preserved, and what structural clarity is essential. Best-effort language detection can classify only observed prose regions; a review must list the surfaces that it reviewed and must not claim complete language coverage.
 
+## Deterministic region classification
+
+Classify the smallest coherent prose region by its function, not only by its file name. Use the most specific functional profile and assign exactly one profile to each observed region. A setup sequence inside a README uses `procedure`; explanatory prose around that sequence uses `documentation`. Use `general` only when no classified profile matches.
+
+Resolve a remaining tie in this order: `docstring`, `comment`, `prompt`, `procedure`, `historical-record`, `documentation`, then `general`. A declaration-attached string is a `docstring`; other source annotations are `comment`. Instructions that control an agent or tool are `prompt`; instructions that tell an operator how to complete a task are `procedure`.
+
+## Authoritative rule-to-profile matrix
+
+This matrix is the authority for rule applicability. Every profile list below and every rule's `Applies to` contract must match it.
+
+| Rule | Profiles |
+| --- | --- |
+| WR-001 | `general`, `documentation`, `procedure`, `prompt`, `docstring`, `comment` |
+| WR-002 | `general`, `documentation`, `procedure`, `prompt`, `docstring` |
+| WR-003 | `general`, `documentation`, `procedure`, `prompt`, `docstring`, `comment` |
+| WR-004 | `general`, `documentation`, `procedure`, `docstring`, `comment` |
+| WR-005 | `general`, `documentation`, `procedure`, `docstring`, `comment` |
+| WR-006 | `general`, `documentation`, `procedure`, `docstring` |
+| WR-007 | `general`, `documentation`, `procedure`, `prompt`, `docstring`, `comment`, `historical-record` |
+| WR-008 | `procedure` |
+| WR-009 | `comment` |
+| WR-010 | `docstring` |
+| WR-011 | `general`, `documentation`, `procedure`, `prompt`, `docstring`, `comment`, `historical-record` |
+| WR-012 | `historical-record` |
+
 ---
 
 ## `general`
@@ -96,15 +121,15 @@ Numbered instructions, runbooks, setup guides, migration steps, troubleshooting 
 
 ### Applicable rules
 
-WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-008 (Procedural clarity), WR-007 (Source fidelity), WR-011 (Unsupported style claim)
+WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-003 (Unambiguous references), WR-004 (Durable rationale), WR-005 (Ticket-only explanation), WR-006 (Durable links), WR-007 (Source fidelity), WR-008 (Procedural clarity), WR-011 (Unsupported style claim)
 
 ### Profile-specific adjustments
 
-- Each step must contain a single required action; separate multiple actions into distinct steps.
-- The actor (human, system, tool) must be explicit in each step.
+- Each step must contain one required action. Separate multiple required actions into distinct steps.
+- Each step must name the actor: human, system, or tool.
 - Prerequisites must precede the actions they affect; warnings must precede the dangerous action.
 - Command names, option names, and ordered state transitions must be preserved exactly.
-- Use active voice and direct commands (e.g., "Run the script" not "The script should be run").
+- Use active voice and name the actor directly.
 
 ### Protected content
 
@@ -118,15 +143,17 @@ WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-008 (Procedur
 
 **Compliant:**
 
-1. Verify that the database is running and accessible from your host.
+1. The operator verifies that the database is running and accessible from the host.
 
-2. Create a new configuration file at `/etc/myapp/config.yaml` with the template from `docs/config.template.yaml`.
+2. The operator creates `/etc/myapp/config.yaml` from `docs/config.template.yaml`.
 
-3. Set the `DB_HOST` environment variable to the database hostname.
+3. The operator sets `DB_HOST` to the database hostname.
 
-4. Run the initialization script: `./bin/init-db.sh --config /etc/myapp/config.yaml`. Wait for the output "Initialization complete".
+4. The operator runs `./bin/init-db.sh --config /etc/myapp/config.yaml`.
 
-5. Restart the application: `systemctl restart myapp`.
+5. The operator waits until the command prints `Initialization complete`.
+
+6. The operator runs `systemctl restart myapp`.
 
 **Noncompliant:**
 
@@ -156,6 +183,7 @@ WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-003 (Unambigu
 - Scope must be clear: what the prompt applies to, what it does not apply to, and what happens outside its scope.
 - Output contract must be explicit: what format, structure, or content is expected.
 - Failure behavior must be documented: what the system should do if constraints cannot be met.
+- Precedence must be explicit: when instructions conflict, state which directive controls and list the lower-priority sources in order.
 - Tool names, prompt variables, and quoted instructions must be preserved exactly.
 
 ### Protected content
@@ -181,6 +209,10 @@ Review technical documentation and generate a report of findings.
 - SHOULD NOT report style preferences without supporting evidence.
 - Failure: If critical inconsistencies are found, report them as blocking findings and do not suppress them.
 
+## Precedence
+
+If instructions conflict, apply repository directives first, then invocation overrides, the classified profile, and bundled writing rules.
+
 ## Output
 
 A Markdown report with the structure defined in `docs/review-report-schema.md`.
@@ -189,7 +221,7 @@ A Markdown report with the structure defined in `docs/review-report-schema.md`.
 
 Review documentation and generate findings. Identify issues and report them. Do not report preferences without evidence.
 
-(Vague scope, no output contract, no failure behavior defined.)
+(Vague scope, no precedence, no output contract, and no failure behavior.)
 
 ### Coverage reporting
 
@@ -205,14 +237,15 @@ Prose descriptions attached to source code declarations: module docstrings, clas
 
 ### Applicable rules
 
-WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-007 (Source fidelity), WR-010 (Contract-poor docstring), WR-011 (Unsupported style claim)
+WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-003 (Unambiguous references), WR-004 (Durable rationale), WR-005 (Ticket-only explanation), WR-006 (Durable links), WR-007 (Source fidelity), WR-010 (Contract-poor docstring), WR-011 (Unsupported style claim)
 
 ### Profile-specific adjustments
 
-- Docstrings must document purpose, observable behavior, side effects, and errors; do not repeat the declaration's name or signature.
-- Parameter names, types, and return types from the signature must not be restated unless they clarify non-obvious behavior.
-- Use the language's docstring convention (Google style for Python, JSDoc for JavaScript, etc.).
-- Do not invent missing behavior or side effects; flag docstrings that lack essential contract information as report-only findings.
+- Docstrings must state a purpose or observable contract that adds information beyond the declaration.
+- Document side effects and errors only when the reviewed source shows that they exist and are contract-relevant.
+- Parameter names and declared types must not be restated unless they clarify non-obvious behavior.
+- Use the language's docstring convention (Google style for Python, JSDoc for JavaScript, and the applicable convention for other languages).
+- Do not invent missing behavior. Apply WR-010 only when the docstring adds no contract information beyond names, signatures, parameters, or declared types.
 
 ### Protected content
 
@@ -226,33 +259,21 @@ WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-007 (Source f
 **Compliant:**
 
 ```python
-def find_user_by_email(email):
-    """
-    Retrieve a user record by email address.
-    
-    Performs a case-insensitive lookup in the user database.
-    Returns None if no matching user is found.
-    
-    Args:
-        email: A valid email string.
-    
-    Returns:
-        A User object or None.
-    
-    Raises:
-        ValueError: If email is None or an empty string.
-        DatabaseConnectionError: If the database is unreachable.
+def find_user_by_email(email: str) -> User | None:
+    """Return the user whose email matches case-insensitively.
+
+    Return None when no record matches.
     """
 ```
 
 **Noncompliant:**
 
 ```python
-def find_user_by_email(email):
-    """Find a user by email. Returns a user or None."""
+def find_user_by_email(email: str) -> User | None:
+    """find_user_by_email(email: str) -> User | None."""
 ```
 
-(Does not document side effects, error conditions, or non-obvious behavior like case-insensitivity.)
+(The docstring only repeats the declaration's name, signature, parameter, and declared types.)
 
 ### Coverage reporting
 
@@ -268,7 +289,7 @@ Inline and block code comments that accompany or explain source code. Text that 
 
 ### Applicable rules
 
-WR-001 (Consistent terminology), WR-004 (Durable rationale), WR-009 (Repetitive comment), WR-011 (Unsupported style claim)
+WR-001 (Consistent terminology), WR-003 (Unambiguous references), WR-004 (Durable rationale), WR-005 (Ticket-only explanation), WR-007 (Source fidelity), WR-009 (Repetitive comment), WR-011 (Unsupported style claim)
 
 ### Profile-specific adjustments
 
@@ -330,21 +351,23 @@ Changelogs, release notes, ADR (Architecture Decision Record) status and history
 
 ### Applicable rules
 
-WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-007 (Source fidelity), WR-012 (Protected provenance)
+WR-007 (Source fidelity), WR-011 (Unsupported style claim), WR-012 (Protected provenance)
 
 ### Profile-specific adjustments
 
-- All entries must use accurate past tense and correct historical context.
-- Necessary dates, version numbers, ticket references, and authorship must be preserved and remain accurate.
+- Historical text must use accurate tense and context.
+- Necessary dates, version numbers, ticket references, authorship, and other provenance must be preserved when evidence shows that they identify the event.
+- Report omitted provenance only when a source record, removed field, or applicable directive establishes that the provenance exists or is necessary.
+- Never infer a missing ticket, author, date, version, or other historical fact.
 - Changes to past records must preserve the original facts; corrections must be noted as amendments, not deletions.
 - Source fidelity is critical: do not alter quoted decisions or cited reasoning.
-- Summaries of past events must be consistent with detailed records; if summarizing, preserve the reference to the detailed record.
+- Summaries of past events must preserve necessary references to detailed records.
 
 ### Protected content
 
-- Dates and version numbers (absolutely required; precision matters).
-- Ticket and issue references (preserve identifiers and links where stable).
-- Authorship and decision-maker names.
+- Necessary dates and version numbers that identify the event.
+- Necessary ticket and issue references, including stable links.
+- Necessary authorship and decision-maker names.
 - Quoted decisions and reasoning from the time of the decision.
 - Release notes and version tags exactly as released.
 
@@ -363,12 +386,12 @@ WR-001 (Consistent terminology), WR-002 (Requirement strength), WR-007 (Source f
 
 **Noncompliant:**
 
-## Changelog
+The source release record identifies version 1.3.0, the 2026-08-15 release date, and issue #2847. A revision replaces that record with:
 
 - Fixed connection retry timeout bug.
 - Added TLS support.
 
-(Missing dates, version numbers, ticket references, and context for what "fixed" means.)
+(The revision removes necessary provenance established by the identified source record.)
 
 ### Coverage reporting
 

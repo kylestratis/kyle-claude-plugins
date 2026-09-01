@@ -14,7 +14,7 @@ This guidance uses general controlled-language and simplified-English principles
 
 ### Applies to
 
-Documentation, procedures, prompts, docstrings, and comments where technical concepts must be identifiable across the reviewed text.
+General prose, documentation, procedures, prompts, docstrings, and comments where technical concepts must be identifiable across the reviewed text.
 
 ### Evidence required
 
@@ -58,11 +58,11 @@ The system offers a containerized deployment approach, referred to as "container
 
 ### Applies to
 
-Documentation, procedures, prompts, and docstrings where implementation or operational expectations are stated.
+General prose, documentation, procedures, prompts, and docstrings where implementation or operational expectations are stated.
 
 ### Evidence required
 
-Identify the requirement statement and the strength word used: `must`, `should`, `may`, or equivalent. Quote the sentence. If the strength is ambiguous or missing, cite the context that would establish the correct strength. Require evidence from the implementation, specification, or applicable directive before proposing a change to the modality.
+Identify the requirement statement and the strength word used: `must`, `should`, `may`, or equivalent. `must` means required, `should` means recommended, and `may` means optional. Quote the sentence. If the strength is ambiguous or missing, cite the context that establishes the correct strength. Require evidence from the implementation, specification, or applicable directive before proposing a change to the modality.
 
 ### Severity
 
@@ -101,7 +101,7 @@ To use the API, you must authenticate using JWT. Session cookies are not support
 
 ### Applies to
 
-Documentation, procedures, docstrings, and comments where pronouns, demonstratives, or other referring expressions are used.
+General prose, documentation, procedures, prompts, docstrings, and comments where pronouns, demonstratives, or other referring expressions are used.
 
 ### Evidence required
 
@@ -118,7 +118,7 @@ review-required
 ### Finding condition
 
 A finding occurs when:
-1. A pronoun or demonstrative has two or more plausible antecedents within the preceding three sentences.
+1. A pronoun or demonstrative has two or more plausible antecedents in the relevant reviewed context.
 2. Removing the ambiguity requires the reader to infer meaning from context.
 3. The ambiguity could lead to misunderstanding the intended subject or action.
 
@@ -146,7 +146,7 @@ Install the database driver and configure the connection pool. The configuration
 
 ### Applies to
 
-Documentation, procedures, docstrings, and comments where reasoning or context is offered to justify a design choice, constraint, or recommendation.
+General prose, documentation, procedures, docstrings, and comments where reasoning or context is offered to justify a design choice, constraint, or recommendation.
 
 ### Evidence required
 
@@ -189,7 +189,7 @@ We use this lightweight library because it has minimal dependencies and integrat
 
 ### Applies to
 
-Documentation, procedures, docstrings, and comments where an explanation or decision rationale is replaced by a ticket reference.
+General prose, documentation, procedures, docstrings, and comments where an explanation or decision rationale is replaced by a ticket reference.
 
 ### Evidence required
 
@@ -232,7 +232,7 @@ The configuration format changed from YAML to JSON in version 2.0 to improve int
 
 ### Applies to
 
-Documentation, procedures, and docstrings where external references or links are provided.
+General prose, documentation, procedures, and docstrings where external references or links are provided.
 
 ### Evidence required
 
@@ -255,7 +255,7 @@ A finding occurs when:
 
 ### Do not flag
 
-- Links to stable specifications, standards, or official documentation.
+- Links to stable specifications, standards, or official documentation when the link supplements sufficient local context.
 - Links in comments that reference issue trackers or version control as historical context.
 - Private links when access requirements are explicitly documented.
 
@@ -267,7 +267,7 @@ For instructions, follow this guide: https://internal.company.com/guides/deploy-
 
 **Compliant:**
 
-To deploy the application, follow these steps: (See the deployment guide in `docs/deployment/production.md` for detailed instructions and environment variables.)
+From the repository root, run `./deploy --environment production`. Confirm that the command prints `Deployment complete`. The valid internal deployment guide at https://internal.company.com/guides/deploy-v2.html provides troubleshooting details and requires access to the company network.
 
 ---
 
@@ -275,11 +275,11 @@ To deploy the application, follow these steps: (See the deployment guide in `doc
 
 ### Applies to
 
-All surfaces: documentation, procedures, prompts, docstrings, comments, and historical records that quote or reference external sources, code, or technical material.
+All surfaces: general prose, documentation, procedures, prompts, docstrings, comments, and historical records that quote or reference external sources, code, or technical material.
 
 ### Evidence required
 
-Identify the original source text and the reviewed version. Quote both. Explain how the meaning, technical accuracy, or usability has changed. Include URLs, file paths, code identifiers, and version information as applicable.
+Identify the original source text and the reviewed version. Quote both. Explain how the meaning, technical accuracy, or usability has changed. Include commands, literals, identifiers, URLs, file paths, technical terms, and version information as applicable.
 
 ### Severity
 
@@ -293,14 +293,14 @@ report-only
 
 A finding occurs when:
 1. Quoted source text is altered, simplified, or reworded in a way that changes meaning.
-2. Commands, identifiers, URLs, or technical terms are changed from their original form.
+2. Commands, literals, identifiers, URLs, or technical terms are changed from their original form.
 3. The change could affect implementation, operation, or understanding of the source.
 
 ### Do not flag
 
 - Formatting changes that preserve exact content (e.g., converting code blocks between Markdown and other formats).
 - Explicit replacements where the original source is no longer valid and the change is documented as a migration.
-- Intentional simplifications in examples that are marked as such (e.g., "Simplified example:").
+- Intentional simplifications that are not represented as exact source, preserve technical meaning and every protected token, and are marked as simplified.
 
 ### Example
 
@@ -335,7 +335,7 @@ review-required
 ### Finding condition
 
 A finding occurs when:
-1. A single step contains multiple actions separated by "and", "or", or "then" that must be performed in sequence.
+1. A single step contains two or more required actions, regardless of punctuation, conjunctions, or clause structure.
 2. The actor (user, system, tool) is unclear or missing.
 3. A warning or prerequisite is placed after the action it affects instead of before.
 
@@ -353,11 +353,13 @@ A finding occurs when:
 
 **Compliant:**
 
-2. Check that the directory does not already exist. If it does, skip to step 5.
+2. The operator verifies that the directory does not exist.
 
-3. Create the directory.
+3. The operator creates the directory.
 
-4. Add the configuration file and run the setup script.
+4. The operator adds the configuration file.
+
+5. The operator runs the setup script.
 
 ---
 
@@ -421,7 +423,7 @@ Docstrings and prose descriptions attached to source declarations (functions, cl
 
 ### Evidence required
 
-Identify the docstring and its location. Quote it. Explain how it repeats the declaration's name, signature, parameter names, or declared types without stating purpose, observable behavior, side effects, errors, or other contract information. Do not invent missing contract details; describe what is absent.
+Identify the docstring and its location. Quote it. Explain how it only repeats the declaration's name, signature, parameter names, or declared types without adding purpose, observable behavior, side effects, errors, or other contract information. Do not invent missing contract details. Require source evidence before claiming that undocumented side effects, errors, or other behavior exists.
 
 ### Severity
 
@@ -434,32 +436,31 @@ report-only
 ### Finding condition
 
 A finding occurs when:
-1. A docstring repeats the function or class name without adding purpose or behavior.
-2. The docstring lists parameters or return types that are already evident from the signature.
-3. The docstring lacks information about side effects, errors, or non-obvious behavior.
+1. A docstring repeats the declaration's name, signature, parameters, or declared types.
+2. The docstring adds no purpose, observable behavior, side effect, error, or other contract information beyond that declared information.
 
 ### Do not flag
 
 - Docstrings that document non-obvious side effects or error conditions.
 - Docstrings that explain the purpose of a declaration, even briefly.
 - Docstrings in tutorials or teaching examples where repetition is pedagogical.
+- Docstrings that omit side effects or errors when the reviewed source gives no evidence that such behavior exists or is contract-relevant.
 
 ### Example
 
 **Noncompliant:**
 
 ```python
-def process_data(input_file, output_file):
-    """Process data from input_file and write to output_file."""
+def process_data(input_file: Path, output_file: Path) -> None:
+    """process_data(input_file: Path, output_file: Path) -> None."""
 ```
 
 **Compliant:**
 
 ```python
 def process_data(input_file, output_file):
-    """
-    Parse the input file in CSV format and apply transformation rules.
-    
+    """Parse CSV input and apply transformation rules.
+
     Write transformed rows to output_file in JSON format, one object per line.
     Raises ValueError if the CSV header is missing or malformed.
     """
@@ -471,7 +472,7 @@ def process_data(input_file, output_file):
 
 ### Applies to
 
-All surfaces: documentation, procedures, prompts, docstrings, and comments where a style rule violation is claimed.
+All surfaces: general prose, documentation, procedures, prompts, docstrings, comments, and historical records where a style rule violation is claimed.
 
 ### Evidence required
 
@@ -502,11 +503,11 @@ A finding occurs when:
 
 **Noncompliant:**
 
-The sentence "Configure the system by setting the environment variable" is not as clear as "Set the environment variable to configure the system." A passive voice is harder to read.
+The sentence "The environment variable must be set before the system is configured" violates the active-voice rule.
 
 **Compliant:**
 
-The sentence "Configure the system by setting the environment variable" could be clarified to active voice: "Set the environment variable to configure the system." This aligns with the active voice principle documented in the repository style guide (see `docs/style/active-voice.md`).
+The repository directive `docs/style/active-voice.md` requires active voice. The sentence "The environment variable must be set before the system is configured" is passive because the subjects receive the actions. Replace it with "Set the environment variable before you configure the system." This replacement preserves the required modality.
 
 ---
 
@@ -518,7 +519,7 @@ Historical records, changelogs, release notes, ADR status and history sections, 
 
 ### Evidence required
 
-Identify the content that lacks necessary provenance. Quote it. Specify what provenance is missing: dates, version identifiers, ticket or issue references, authorship, or source history. Preserve necessary dates, versions, tickets, and authorship in any revision; do not remove them.
+Identify the content that lacks necessary provenance. Quote it. Cite evidence that the provenance exists in a source record, was removed in a revision, or is required to identify the historical event. Specify what necessary provenance is missing: a date, version identifier, ticket or issue reference, authorship, or source history. Preserve necessary provenance in any revision. Never infer a ticket, author, date, version, or other missing fact.
 
 ### Severity
 
@@ -531,9 +532,9 @@ report-only
 ### Finding condition
 
 A finding occurs when:
-1. Historical record text is missing necessary dates, versions, ticket references, or authorship that establish when and why a decision was made.
-2. Provenance information is present but unclear or incomplete.
-3. The record would be unintelligible to a reader without the missing context.
+1. Evidence shows that a historical record omits necessary provenance that identifies when, why, or by whom an event or decision occurred.
+2. Necessary provenance is present but a revision makes it unclear or incomplete.
+3. The omission makes the record unintelligible without the identified source context.
 
 ### Do not flag
 
@@ -543,17 +544,17 @@ A finding occurs when:
 
 ### Example
 
-**Noncompliant:**
+**Source record:**
 
-**CHANGELOG:**
+- Version 1.2.0, released 2026-08-15: Fixed connection retry logic for timeouts. See issue #2847.
+
+**Noncompliant revision:**
 
 - Fixed the connection retry logic to handle timeouts correctly.
 
-**Compliant:**
+**Compliant revision:**
 
-**CHANGELOG:**
-
-- Fixed the connection retry logic to handle timeouts correctly. (See issue #2847; fix included in v1.2.0, released 2026-08-15.)
+- Version 1.2.0, released 2026-08-15: Fixed connection retry logic for timeouts. See issue #2847.
 
 ---
 

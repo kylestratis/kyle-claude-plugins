@@ -78,7 +78,7 @@ A replacement or corrective action. The action must:
 
 The safety class of the suggested action. One of:
 
-- `safe` — The replacement is exact, local, conflict-free, source-preserving, and requires no inferred meaning, rationale, or scope decision. All conditions are required: a finding marked `safe` must meet all of them. Examples: fixing a typo, applying consistent terminology within a single phrase, correcting a date that is factually wrong.
+- `safe` — The replacement is exact, local, conflict-free, source-preserving, and requires no inferred meaning, rationale, or scope decision. All conditions are required. Because no bundled rule defaults to `safe`, this class is reachable only when an applicable repository policy supplies the exact replacement and every invariant holds. Example: correcting an unquoted prose typo when that policy identifies the exact correction.
 
 - `review-required` — A reasonable replacement exists, but meaning, tone, scope, deletion safety, or policy choice requires user judgment. Examples: choosing between two synonyms, deciding whether to delete a comment, resolving ambiguous pronouns, consolidating repetitive sections.
 
@@ -108,7 +108,7 @@ The prose can misdirect implementation or operation, or lacks durable contract i
 - Inconsistent terminology that obscures whether two sections refer to the same feature.
 - Ambiguous requirement strength ("should" vs. "must") that could lead to incorrect implementation.
 - A procedure with multiple actions per step or missing prerequisites.
-- A docstring that does not document errors or side effects.
+- A ticket-only explanation that withholds durable context.
 - Transient context in an explanation without a lasting reason.
 
 Major findings often allow `review-required` fixes because reasonable alternatives exist, but the choice between them depends on understanding the intent and context.
@@ -118,9 +118,8 @@ Major findings often allow `review-required` fixes because reasonable alternativ
 The issue reduces clarity or maintainability without changing the documented contract. Examples:
 
 - A comment that narrates visible code.
-- An unambiguous link that is not broken but could be more accessible.
-- Inconsistent capitalization or formatting in examples.
-- A docstring that is brief but complete.
+- A private link whose access requirements are not explained.
+- A docstring that only repeats its declaration's signature or declared types.
 
 Minor findings may allow `safe` or `review-required` fixes when they are low-risk and do not affect technical meaning.
 
@@ -130,18 +129,17 @@ Minor findings may allow `safe` or `review-required` fixes when they are low-ris
 
 ### safe
 
-The replacement is exact, local, conflict-free, source-preserving, and requires no inferred meaning, rationale, or scope decision. Every condition below is required:
+The replacement is exact, local, conflict-free, source-preserving, and requires no inferred meaning, rationale, or scope decision. Because no bundled rule defaults to `safe`, an applicable repository policy must supply the exact replacement. Every condition below is required:
 
 - **Exact:** The replacement text is a straightforward substitution; no paraphrasing or interpretation is needed.
 - **Local:** The change is confined to the identified region and does not require modifications elsewhere.
 - **Conflict-free:** The change does not interact with other findings or rules in the same region.
-- **Source-preserving:** The change preserves all quoted material, technical terms, identifiers, and necessary provenance.
+- **Source-preserving:** The change preserves all quoted material, technical terms, identifiers, literals, commands, URLs, and necessary provenance.
 - **No inferred meaning:** The replacement does not require guessing the author's intent or inferring missing context.
+- **Policy-supplied:** An applicable repository policy identifies the exact replacement.
 
-Examples of `safe` fixes:
-- Fixing a typo: "bussiness" → "business".
-- Applying consistent terminology: "container deployment" → "containerized deployment" (when uniformly applied).
-- Correcting a date or version that is factually wrong in a historical record.
+Example of a `safe` fix:
+- Correct an unquoted prose typo when the applicable repository policy identifies the exact correction.
 
 If any condition is uncertain, downgrade to `review-required` or `report-only`.
 
@@ -172,18 +170,20 @@ Report-only findings are documented but cannot be automatically fixed. They requ
 
 ## Overlap and Conflicts
 
-When multiple findings share overlapping evidence regions, consolidate them as follows:
+When multiple findings have genuinely overlapping evidence regions, handle them as follows:
 
-1. **Group findings by evidence region:** Identify all findings whose evidence regions overlap or are adjacent (within 1-2 lines).
+1. **Group only overlapping regions:** Two evidence regions overlap only when they share reviewed text. Do not group findings because their regions are adjacent.
 
-2. **Keep the highest-severity root finding:** Among overlapping findings, retain the finding with the highest severity (`critical` > `major` > `minor`). This becomes the root finding.
+2. **Keep the highest-severity root finding for compatible actions:** Among overlapping findings with compatible suggested actions, retain the highest severity (`critical` > `major` > `minor`) as the root finding.
 
-3. **Merge compatible reasons and rule identifiers:** Add the rule identifiers and evidence-backed reasons of subordinate findings to the root finding's reason. The merged reason explains all violations in the region.
+3. **Merge compatible reasons and rule identifiers:** Add the rule identifiers and evidence-backed reasons of subordinate findings to the root finding's reason.
 
-4. **If replacements conflict:** When multiple findings in the same region propose different replacements or deletions:
+4. **Retain every finding when replacements conflict:** Conflicting replacements are an exception to consolidation.
    - Apply neither replacement.
-   - Mark the finding as `unresolved`.
-   - Note in the reason that replacements conflict and require manual triage.
+   - Retain every affected finding for final ordering and ID assignment.
+   - Start each affected finding's reason with the exact text `UNRESOLVED: conflicting replacements.`
+   - Set each affected finding's suggested action to `No automatic action possible; conflicting replacements require user judgment.`
+   - Keep or downgrade each rule's default fix safety; never upgrade it.
 
 5. **Order final findings by:** file path, starting line number, then severity (`critical`, `major`, `minor`).
 
@@ -238,12 +238,14 @@ evidence: |
   Create the configuration file and set the environment variable.
   Then run the setup script.
 reason: |
-  Step combines two required actions ("Create...file" and "set...variable")
-  into a single step. Per WR-008 (Procedural clarity), each step must contain
-  a single action. Applicable profile: procedure.
+  The evidence contains three required actions. WR-008 (Procedural clarity)
+  requires one required action per step and defaults to review-required.
+  No repository policy supplies an exact replacement, so the no-upgrade rule
+  controls this finding.
 suggested_action: |
-  Split into two steps:
-  Step 1: Create the configuration file at /etc/app/config.yaml.
-  Step 2: Set the environment variable DB_HOST to the database hostname.
-fix_safety: safe
+  Review this wording as three steps that preserve the reviewed actions:
+  Step 1: Create the configuration file.
+  Step 2: Set the environment variable.
+  Step 3: Run the setup script.
+fix_safety: review-required
 ```
