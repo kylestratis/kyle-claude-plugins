@@ -455,3 +455,145 @@ Result
 **Observable actions:** The valid invocation preserved the exact routed string, both path values, both profile mappings, and the review-only default. All six invalid invocations accumulated their errors and reported `tools_called: none` plus `status: stopped before discovery`.
 
 **Result:** PASS for `documentation-review.AC1.3` and `documentation-review.AC1.4`.
+
+## GREEN: Task 3 scope discovery and exclusions
+
+All three evaluations used fresh non-interactive `omp -p` sessions with `--no-tools --no-skills --no-rules --no-extensions --no-session`. The CLI resolved `--model gpt-5.4-mini` to provider `openai-codex`, model `gpt-5.4-mini`. Each session received only the current skill, its scenario, and the prompt shown below. No subagent ran. Skill SHA-256: `4fe24bda83fa1cab217abf35bf9b1c84082bcdb9228f871a1adcd5aeb302bf56`.
+
+### GREEN-T3-1: PR scope
+
+**Prompt:**
+
+```text
+Run the attached PR-scope behavioral scenario with the attached reviewing-documentation skill as the controlling instruction. Treat the fixture transcript as the only simulated tool evidence; do not call tools or dispatch subagents. Evaluate both the success and failure variants. Show the ordered checks and exact scope/disposition/report outcome, then give pass or fail for each mapped acceptance criterion. Clearly mark simulated evidence and real GitHub verification pending Phase 4.
+```
+
+**Observed actions and response:**
+
+```text
+Simulated evidence only. Real GitHub verification pending Phase 4.
+tools_called: none
+
+Success variant:
+1. Validated the empty argument string and resolved PR, no paths, content-classified profiles, and review-only.
+2. Accepted gh auth status exit 0.
+3. Resolved PR 42 with base 1111111111111111111111111111111111111111 and head 2222222222222222222222222222222222222222.
+4. Matched local HEAD to the PR head and accepted the ancestor check.
+5. Used the base OID in name and region diffs.
+6. Limited review to docs/guide.md:9-10 and src/widget.py:19.
+7. Reported unchanged and deleted regions out of scope.
+
+Report:
+scope: PR base 1111111111111111111111111111111111111111
+pull_request: 42
+head_oid: 2222222222222222222222222222222222222222
+path_constraints: none
+mode: review-only
+reviewed_regions: docs/guide.md:9-10, src/widget.py:19
+out_of_scope: unchanged and deleted regions
+runtime_evidence: simulated; real GitHub verification pending Phase 4
+
+Failure variant:
+1. Validated the empty argument string.
+2. Accepted gh auth status exit 0.
+3. Stopped when gh pr view returned no pull requests for branch docs-review.
+
+Documentation Review Incomplete
+PR scope discovery failed: gh pr view found no pull request for the current branch docs-review.
+No comparison base was selected, and no files were read or edited.
+Recovery: check out a branch with an open pull request, or run again with --scope repository.
+
+AC2.1: PASS in the success variant.
+AC2.5: PASS in the failure variant.
+```
+
+**Result:** PASS for `documentation-review.AC2.1` and `documentation-review.AC2.5`. The response used one verified simulated base, limited findings to current changed prose, and stopped with exact recovery on PR failure.
+
+### GREEN-T3-2: Repository scope
+
+**Prompt:**
+
+```text
+Run the attached repository-scope behavioral scenario with the attached reviewing-documentation skill as the controlling instruction. Treat the fixture transcript as the only simulated tool evidence; do not call tools or dispatch subagents. Account for every candidate in sorted dispositions, preserve review-only byte identity, and give pass or fail for each mapped acceptance criterion. Clearly mark simulated evidence.
+```
+
+**Observed response:**
+
+```text
+Simulated evidence only; no tools called.
+
+scope: repository
+path_constraints: none
+mode: review-only
+runtime_evidence: simulated
+byte_identity: preserved
+
+Candidate ledger, sorted by repository-relative path:
+.env.local                    excluded   sensitive content
+README.md                     reviewed   human-readable documentation
+assets/logo.png               unreadable binary content
+dist/generated.md             excluded   build output
+docs/runbook.md               reviewed   human-readable procedure
+node_modules/pkg/README.md     excluded   dependency cache
+package-lock.json             excluded   lockfile
+src/widget.py                 reviewed   supported Python comments and docstrings
+vendor/library/README.md       excluded   vendored dependency
+
+Reviewed surfaces:
+documentation: 1
+procedure: 1
+comment: 1
+docstring: 1
+
+Unsupported files or surfaces: none
+Findings: none in supplied evidence
+Proposed replacements: none
+AC2.2: PASS
+AC5.1: PASS
+```
+
+**Result:** PASS for `documentation-review.AC2.2` and the scenario's `documentation-review.AC5.1` check. Every supplied candidate had one sorted disposition, sensitive content was not read, and review-only changed no bytes.
+
+### GREEN-T3-3: Explicit paths
+
+**Prompt:**
+
+```text
+Run both variants of the attached explicit-path behavioral scenario with the attached reviewing-documentation skill as the controlling instruction. Treat the fixture transcript as the only simulated tool evidence; do not call tools or dispatch subagents. Show ordered path intersection before exclusions, exact dispositions including constrained-out paths, byte-change outcome, and pass or fail for each mapped acceptance criterion. Clearly mark simulated evidence and real GitHub verification pending Phase 4 for PR scope.
+```
+
+**Observed response:**
+
+```text
+Simulated evidence only. tools_called: none.
+
+Repository variant:
+scope: repository
+path_constraints: docs, vendor/guide.md, .env.local
+intersection before exclusions: docs/guide.md, docs/generated.md, vendor/guide.md, .env.local
+
+.env.local        excluded        sensitive content
+README.md         constrained-out outside path intersection
+docs/generated.md excluded        generated-file marker
+docs/guide.md     reviewed        eligible documentation
+src/widget.py     constrained-out outside path intersection
+vendor/guide.md   excluded        vendored content
+
+No edits. Only docs/guide.md was eligible for review.
+
+PR variant:
+scope: PR base aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+path_constraints: docs/guide.md, src/widget.py
+runtime_evidence: simulated; real GitHub verification pending Phase 4
+intersection before exclusions: docs/guide.md, src/widget.py
+
+docs/guide.md  reviewed        one changed prose region
+docs/other.md  constrained-out outside path intersection
+src/widget.py  unsupported     no prose change; code-only surface
+
+No edits.
+AC2.3: PASS
+AC2.6: PASS
+```
+
+**Result:** PASS for `documentation-review.AC2.3` and `documentation-review.AC2.6`. Repeated paths narrowed both scopes before exclusions, and explicit paths did not bypass generated, vendor, or sensitive exclusions.

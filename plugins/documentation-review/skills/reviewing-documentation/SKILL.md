@@ -39,7 +39,7 @@ The order of repeated `--path`, `--profile`, and `--apply-approved` values is si
 
 `--apply-approved` selects approved-fix mode. `--autofix` selects autofix mode. They are mutually exclusive.
 
-## Argument validation gate
+## Gate 1: Validate arguments
 
 Complete this gate using only the routed string already in context. Do not use `git`, `gh`, `Glob`, `Grep`, `Read`, `Edit`, or any other tool during validation.
 
@@ -87,7 +87,7 @@ A review snapshot is eligible only when it comes from the immediately preceding 
 
 Approved-fix validation uses only that snapshot. It does not discover files, reconstruct findings, widen scope, import an earlier snapshot, or accept an ID absent from the eligible snapshot. If no eligible snapshot exists, or any requested ID has no exact match, reject every unmatched ID during the argument gate and instruct the user to run review-only mode first and approve an ID from its immediately preceding snapshot.
 
-## Load policy references
+## Gate 2: Load policy references
 
 After argument validation succeeds, load all three references by these exact relative paths:
 
@@ -98,3 +98,55 @@ After argument validation succeeds, load all three references by these exact rel
 Treat a missing or unreadable reference as a blocking skill error. Report the exact path and read failure; do not continue with partial policy.
 
 The references define detailed writing, profile, precedence, evidence, and fix-safety rules. Keep those rules in the references rather than duplicating them here.
+
+## Gate 3: Discover the complete scope
+
+Finish discovery and record every candidate disposition before reviewing prose. Use repository-relative paths and sort every disposition list by path.
+
+### PR scope
+
+Run these checks in order:
+
+1. Run `gh auth status` without reading or printing credentials.
+2. Require an attached current branch, then resolve only that branch's PR with `gh pr view --json baseRefName,baseRefOid,headRefName,headRefOid,number,url`.
+3. Resolve local `HEAD` with `git rev-parse HEAD`.
+4. Require nonempty `baseRefOid` and `headRefOid`, require `headRefOid` to equal local `HEAD`, and require `git merge-base --is-ancestor "<baseRefOid>" HEAD` to exit 0.
+5. Freeze the returned `baseRefOid` as the only comparison base. A branch name, remote default, calculated merge base, previous commit, staged diff, or working-tree heuristic is not an alternative base.
+6. Discover candidates with the NUL-safe `git diff --name-only -z "<baseRefOid>" --`.
+7. Apply the ordered `--path` intersection, then the default exclusions below.
+8. For each eligible path, get regions with `git diff --unified=0 "<baseRefOid>" -- "<path>"`. Review only current prose in added or modified regions. Read adjacent context only to classify that prose. Deleted and unchanged prose is out of scope and cannot produce findings.
+
+Stop discovery if authentication or PR resolution fails; the PR is absent or ambiguous; `HEAD` is detached; an OID is missing; local `HEAD` differs from the PR head; the base is not an ancestor; or any required Git or GitHub operation fails. Report the exact failed check, state that no comparison base was selected or substituted, and give one specific recovery action: authenticate, check out the PR branch, push the current head, fetch the base, or rerun explicitly with `--scope repository`, as applicable. Do not read review targets or edit after a blocking scope failure.
+
+### Repository scope
+
+1. Use `Glob` from the repository root to discover the repository candidate set. Do not use PR or diff discovery.
+2. Apply all ordered `--path` constraints as an intersection before any exclusion. An empty intersection stays empty.
+3. Apply the default exclusions below.
+4. Keep human-readable documentation plus supported comment and docstring surfaces. Use `Read` only after a path passes sensitive, dependency, vendor, build, cache, tracking-export, minified, and lockfile exclusions.
+
+### Non-bypassable default exclusions
+
+An explicit path never re-includes an excluded path. Apply these exclusions in both scopes:
+
+- Generated content identified by a standard generated-file marker.
+- `.git/`, vendored dependency directories, and `vendor/`.
+- Build output in `dist/`, `build/`, `target/`, and `coverage/`.
+- Dependency and tool caches: `node_modules/`, `.venv/`, `venv/`, `__pycache__/`, `.tox/`, `.mypy_cache/`, and `.pytest_cache/`.
+- Tracking exports: `.beads/`, `.deciduous/`, `docs/graph-data.json`, and `docs/git-history.json`.
+- Minified files such as `*.min.*`.
+- Lockfiles: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `uv.lock`, `poetry.lock`, `Cargo.lock`, and `go.sum`.
+- Binary content and content that cannot be decoded as human-readable text.
+- Sensitive content: `.env*`, credentials, private keys, and token-bearing configuration.
+
+### Scope ledger
+
+Account for every discovered path exactly once:
+
+- `constrained-out`: outside the ordered path intersection; do not read it.
+- `reviewed`: eligible path and exact reviewed regions or surfaces.
+- `excluded`: path plus one fixed exclusion category.
+- `unreadable`: path plus the exact read or decode error.
+- `unsupported`: path or surface plus the specific unsupported reason.
+
+Continue after an unreadable or unsupported independent file. Report unchanged and deleted PR regions as out of review scope, not reviewed. Include the verified PR number, base OID, head OID, path constraints, mode, reviewed regions, and whether evidence was simulated when a supplied transcript replaces real tool calls. Never claim broader file, parser, language, or repository coverage than the ledger proves.
