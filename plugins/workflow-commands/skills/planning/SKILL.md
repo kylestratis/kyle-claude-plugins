@@ -41,12 +41,12 @@ Use your Skill tool to engage the `starting-an-implementation-plan` skill from e
 # Epic (if not exists)
 bd create "Implement: <feature>" -t epic -p 2
 
-# Task per phase with sequential dependencies
-bd create "Phase 1: <desc>" -t task -p 3
-bd dep add <phase1-id> <epic-id>
+# Phase tasks belong to the epic without being blocked by it
+bd create "Phase 1: <desc>" -t task -p 3 --parent <epic-id>
 
-bd create "Phase 2: <desc>" -t task -p 3
-bd dep add <phase2-id> <phase1-id>
+bd create "Phase 2: <desc>" -t task -p 3 --parent <epic-id>
+# Hard prerequisites determine execution order
+bd dep add <phase2-id> <phase1-id> --type blocks
 
 # Continue for all phases...
 ```
