@@ -539,7 +539,7 @@ Resume work on an existing beads task.
 ---
 ### `/workflow-commands:orchestrate`
 
-Coordinate independent ready Beads tickets in isolated worktrees.
+Coordinate independent open leaf Beads tickets in isolated worktrees.
 
 ```bash
 /workflow-commands:orchestrate [<ticket-id> ...] [--max-parallel <count>]
@@ -547,10 +547,10 @@ Coordinate independent ready Beads tickets in isolated worktrees.
 
 | Argument | Description |
 |----------|-------------|
-| `<ticket-id>` | Restrict the candidate set to specific Beads tickets |
-| `--max-parallel <count>` | Positive worker limit; defaults to 4 and is capped at the runtime concurrency limit |
+| `<ticket-id>` | Restrict the candidate set to specific open leaf Beads tickets |
+| `--max-parallel <count>` | Optional exact two-token positive worker limit; use it at most once; defaults to 4 and is capped at the runtime limit |
 
-Without ticket IDs, the workflow starts from `bd ready`. It validates arguments before tracker changes, atomically claims each selected ticket for one orchestration run, and excludes overlapping or dependent tickets. It integrates worker commits one at a time, preserves the integration worktree through publication and tracker reconciliation, and closes tickets only after the exact published revision is verified.
+Without ticket IDs, the workflow starts from `bd ready`. Each invocation creates a new run and rejects in-progress or blocked tickets. Use `/workflow-commands:continue <ticket-id>` to recover those tickets. The workflow creates its integration branch and all worker branches from one target revision, integrates worker commits serially, and closes tickets only after it verifies the published source revision and reconciles tracker-only changes.
 
 ---
 

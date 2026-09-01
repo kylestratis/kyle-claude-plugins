@@ -11,9 +11,12 @@ Coordinate independent Beads tickets with isolated workers, serial integration, 
 - Verifies the combined revision before publishing changes or closing represented tickets
 
 **Fixed:**
-- Claims tickets atomically with run-scoped ownership metadata and resumes only matching branches and worktrees
-- Preserves the integration worktree through publication, stable combined verification, and tracker reconciliation
-- Validates the parallel limit before tracker changes and logs orchestration actions, decisions, and outcomes in Deciduous
+- Starts each orchestration with a new run ID and sends in-progress or blocked ticket recovery to `/workflow-commands:continue`
+- Creates the integration branch and every worker branch from one recorded target revision
+- Defines release and recovery state for every post-claim exit
+- Accepts one exact `--max-parallel <positive-integer>` option before tracker mutation
+- Bounds each provider alternate to one try per worker attempt and restores temporary overrides
+- Verifies that post-reconciliation changes contain only repository-declared tracker or decision-graph paths
 
 ## workflow-commands 0.7.0
 
