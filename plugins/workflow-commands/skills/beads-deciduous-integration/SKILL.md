@@ -29,6 +29,19 @@ user-invocable: true
 | `verify` | Closes epic | Logs outcome |
 | `orchestrate` | Claims and reconciles tickets | Logs run action, wave and material routing/coupling decisions, and outcome |
 
+## Tracked Export Allowlist
+
+The default tracked export allowlist is exactly:
+
+- `.beads/issues.jsonl`
+- `.beads/interactions.jsonl`
+- `.beads/metadata.json`
+- `.deciduous/patches/**`
+
+Repository directives may add exact paths. They never broaden the allowlist to a whole directory. If the effective allowlist is ambiguous, orchestration stops before claiming a ticket.
+
+`orchestrating-beads-tickets` consumes this exact effective allowlist for source-content exclusions and reconciliation path proof.
+
 ## Quick Reference
 
 ### Beads

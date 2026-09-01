@@ -48,7 +48,7 @@ Run one ticket directly when work is small, ownership is uncertain, or the ticke
 4. Workers never close tickets or mutate the integration branch.
 5. Integration is serial, even when implementation is parallel.
 6. Worker reports and clean cherry-picks are evidence, not verification.
-7. Ticket closure remains provisional until the verified source is published and its local reconciliation commit passes the path check and push.
+7. Ticket closure remains provisional until the verified source is published and the actual reconciliation commit passes the tracker-only path proof and reaches the target branch.
 
 Deadline, sunk-cost, or authority pressure does not weaken these invariants. Reduce the wave or ship a verified subset instead.
 
@@ -57,7 +57,7 @@ Deadline, sunk-cost, or authority pressure does not weaken these invariants. Red
 ### 1. Establish the integration baseline
 
 1. Read the repository's tracking and completion directives.
-2. Invoke `beads-deciduous-integration` for canonical tracker semantics and the repository-declared tracker and generated decision-graph paths.
+2. Invoke `beads-deciduous-integration` for canonical tracker semantics. Consume its exact default tracked export allowlist: `.beads/issues.jsonl`, `.beads/interactions.jsonl`, `.beads/metadata.json`, and `.deciduous/patches/**`. Repository directives may add exact paths, but never broaden the allowlist to a whole directory. Stop before claiming a ticket if the effective allowlist is ambiguous, and use that effective allowlist throughout this workflow.
 3. Record the current target branch and preserve unrelated changes.
 4. Refresh the target branch. Resolve and record its exact `target-sha`.
 5. Generate a new unique run ID for every invocation. Set the run actor to `orchestrate:<run-id>`. Never recover a run ID or adopt branch, worktree, assignee, or metadata from an earlier run.
@@ -108,6 +108,17 @@ After selecting the wave and before creating worktrees:
 Every exit after a successful claim must use one of these paths. This includes setup errors, validation failures, worker failures, cancellation, deferral, publication errors, and coordinator interruption.
 
 Useful state is an implementation commit, an uncommitted implementation change, or ticket-specific investigation that an operator can resume manually. An empty branch or worktree is not useful state.
+
+Every useful-state or keep-as-is exit records one complete recovery record:
+
+- exit phase;
+- integration branch, absolute integration worktree path, and integration `HEAD`;
+- every accepted worker SHA;
+- `verified-code-sha`, when one exists;
+- PR URL and head SHA, or the exact published-target state; and
+- for every worker, ticket ID, branch, absolute worktree path, current commit, uncommitted paths, completed work, remaining work, and failure class and reason.
+
+A later orchestration run only reports this recovery record and rejects the ticket. It never adopts any recorded run, branch, worktree, commit, or ownership.
 
 When no useful state exists in the current run:
 
@@ -230,10 +241,10 @@ After the full successful wave is assembled:
 1. Run every affected ticket's focused acceptance checks on the integrated tree.
 2. Exercise each changed observable surface with a behavioral smoke test.
 3. If two tickets interact only after fan-in, add or run the smallest durable test that protects that combined observable contract.
-4. Require the source portion of the integration worktree to be clean. Source content is every tracked and untracked path except the repository-declared tracker and generated decision-graph paths. Record the exact pre-gate `HEAD` SHA and a snapshot of that source content.
+4. Require the source portion of the integration worktree to be clean. Source content is every tracked and untracked path outside the effective tracked export allowlist resolved in Section 1. Record the exact pre-gate `HEAD` SHA and a snapshot of that source content.
 5. Invoke `verifying` without `--task` to run the repository-required tests, linters, builds, and review once on the combined revision. The verifier must not close any orchestration ticket.
-6. After `verifying`, compare the source-content snapshot with the pre-gate snapshot. Declared tracker or generated decision-graph mutations do not restart verification; preserve them in the worktree and carry them into Section 8. If any source content changed, incorporate the change and restart all of Section 7.
-7. If any later integration fix, target-branch update, new test, or other mutation changes source content, restart all of Section 7 against the new source revision. Do not require whole-worktree cleanliness when only declared tracker or generated decision-graph paths differ.
+6. After `verifying`, compare the source-content snapshot with the pre-gate snapshot. Mutations matched by the exact effective tracked export allowlist do not restart verification; preserve them in the worktree and carry them into Section 8. If any source content changed, incorporate the change and restart all of Section 7.
+7. If any later integration fix, target-branch update, new test, or other mutation changes source content, restart all of Section 7 against the new source revision. Do not require whole-worktree cleanliness when only paths matched by the exact effective tracked export allowlist differ.
 
 After all checks pass without a source-content change, record the pre-gate `HEAD` as `verified-code-sha`. Verification evidence belongs only to that source content. Tracker-only mutations or commits do not replace `verified-code-sha`.
 
@@ -243,7 +254,7 @@ Present these worktree-aware choices directly:
 
 - **Local merge:** merge from the existing worktree that owns the target branch.
 - **Pull request:** create and update the PR from the integration worktree that owns the integration branch.
-- **Keep as-is:** preserve the exact integration and worker branches, worktrees, ticket ownership, and recorded recovery context. This does not publish or close tickets and requires explicit manual recovery.
+- **Keep as-is:** preserve the exact integration and worker branches, worktrees, ticket ownership, and complete recovery record defined by the post-claim exit contract. This does not publish or close tickets and requires explicit manual recovery.
 
 Discard is unavailable after worker work has been accepted. Defer all branch and worktree cleanup until publication and reconciliation succeed.
 
@@ -253,14 +264,18 @@ After the verified source reaches the target branch:
 
 1. Resolve the published target SHA and confirm that it contains each accepted worker change.
 2. Require its source content to match `verified-code-sha`. If source content differs, run Section 7 on that exact published revision and record a new `verified-code-sha`.
-3. Record the exact pre-reconciliation ticket states and ownership. Treat every following tracker comment, closure, parent reconciliation, and Deciduous outcome as provisional.
-4. Add the commit or PR and verification evidence to each represented ticket, close represented tickets, reconcile eligible parents last, and log the final Deciduous outcome. Leave failed, blocked, deferred, or omitted tickets in their recorded state.
-5. From the existing worktree that owns the published target branch, create the reconciliation commit locally according to repository directives. It must contain the provisional tracker and generated decision-graph changes, including tracker-only mutations carried from Section 7.
-6. Before any push, diff the reconciliation commit from `verified-code-sha`. Require every changed path to be a repository-declared tracker path or generated decision-graph path.
-7. If the diff contains a source path, do not push. Reopen closed tickets and restore every provisional ticket state and ownership to the recorded pre-reconciliation values. Preserve all worker and integration branches and worktrees. Repair or verify the source change through Section 7, then repeat publication and reconciliation with a new local reconciliation commit.
-8. Push the reconciliation commit only after the path check succeeds. Tracker comments, closures, parent state, and Deciduous outcomes become final only when that push succeeds. On push failure, keep them provisional, preserve ownership and all recovery state, and report the publication error.
-9. Do not compare or claim whole-tree identity between `verified-code-sha` and the reconciliation commit. The pre-push path-bound diff is the reconciliation proof.
-10. Only after the reconciliation push succeeds, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
+3. Before any provisional tracker or Deciduous mutation, fetch the target branch and fast-forward or otherwise update the existing target-owning worktree until its `HEAD` equals the resolved published target SHA. Never switch the target branch into another worktree. Stop before mutation if the target-owning worktree cannot reach that exact revision.
+4. Select the repository-compatible reconciliation route before mutation. Push directly to the target only when repository directives permit it, using the target-owning worktree. Otherwise create a dedicated reconciliation branch and worktree at exactly the published target SHA and publish it through a dedicated reconciliation PR.
+5. Initialize the pre-reconciliation snapshot with every represented ticket's mutable state and ownership and every affected parent's mutable state. As provisional artifacts are created, add every provisional comment ID, each parent mutation with its before and after state, and every Deciduous node ID to that same snapshot before continuing.
+6. From the worktree that owns the selected reconciliation branch, add the commit or PR and verification evidence to each represented ticket, close represented tickets, reconcile eligible parents last, and log the final Deciduous outcome. Leave failed, blocked, deferred, or omitted tickets in their recorded state. Every comment, closure, parent mutation, and outcome remains provisional.
+7. Create the actual reconciliation commit in that worktree according to repository directives. It must contain the allowlisted provisional changes, including mutations carried from Section 7.
+8. Before publication, diff the actual reconciliation commit from the published target SHA. Require every changed path to match the exact effective tracked export allowlist resolved in Section 1.
+9. Publish that exact reconciliation commit through the selected route. A direct route pushes it to the target branch. A PR route pushes only the dedicated reconciliation branch and merges that commit through the dedicated PR. Never force-push over another contributor's work.
+10. Finality requires both proofs: the actual reconciliation commit passed the tracker-only path proof in step 8, and a fresh fetch proves that the target branch contains that exact commit. Fast-forward or update the target-owning worktree to the resolved final target `HEAD`. Until then, preserve ownership and every recovery record and report the reconciliation as provisional.
+11. If reconciliation is rejected, restore every mutable ticket and parent state and ownership from the pre-reconciliation snapshot. Append-only comments and outcomes are corrected rather than deleted: before repeating reconciliation, add an explicit correction or supersession record that names each rejected comment ID or Deciduous outcome/node ID and states that the rejected artifact is not completion evidence. Rejection includes a failed path proof, an abandoned reconciliation commit, a rejected or closed reconciliation PR, or a target update that requires a replacement commit.
+12. A transport failure leaves reconciliation pending rather than rejected. Preserve the provisional state and recovery record, report the publication error, and do not repeat reconciliation while that commit can still reach the target.
+13. Do not compare or claim whole-tree identity between `verified-code-sha` and the reconciliation commit. The path-bound diff of the actual reconciliation commit and its presence on the target are the reconciliation proof.
+14. Only after reconciliation becomes final, remove completed worktrees and branches. Preserve any worktree that contains unresolved or recoverable work.
 
 ## Completion Report
 
