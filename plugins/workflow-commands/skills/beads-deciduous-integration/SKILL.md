@@ -37,7 +37,8 @@ bd create "Task" -t task -p 3    # Create
 bd list / bd ready               # View
 bd update <id> --status in_progress  # Update status (no "done"; close to complete)
 bd close <id> --reason "Done"    # Close
-bd dep add <child> <parent>      # Dependency
+bd create "Phase" -t task --parent <epic-id>  # Hierarchy; remains ready
+bd dep add <blocked-id> <blocker-id> --type blocks  # Hard prerequisite
 bd comment <id> "LEARNED: ..."   # Note discoveries
 ```
 
