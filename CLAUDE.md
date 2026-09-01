@@ -214,8 +214,9 @@ bd close <id>                                # Complete work
 ```
 
 For full workflow details: `bd prime`
+<!-- END BEADS INTEGRATION -->
 
-### Rules
+## Issue Tracking Rules
 
 - Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
@@ -250,4 +251,3 @@ For full workflow details: `bd prime`
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
-<!-- END BEADS INTEGRATION -->
