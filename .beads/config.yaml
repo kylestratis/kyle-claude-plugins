@@ -37,16 +37,16 @@
 # Debounce interval for auto-flush (can also use BEADS_FLUSH_DEBOUNCE)
 # flush-debounce: "5s"
 
-# Export events (audit trail) to .beads/events.jsonl on each flush/sync
+# Export events (audit trail) to .beads/events.jsonl on each JSONL flush
 # When enabled, new events are appended incrementally using a high-water mark.
-# Use 'bd export --events' to trigger manually regardless of this setting.
+# Note: bd 1.0.4 has no manual trigger flag for this; 'bd export' emits issues only.
 # events-export: false
 
-# Git branch for beads commits (bd sync will commit to this branch)
-# IMPORTANT: Set this for team projects so all clones use the same sync branch.
-# This setting persists across clones (unlike database config which is gitignored).
-# Can also use BEADS_SYNC_BRANCH env var for local override.
-# If not set, bd sync will require you to run 'bd config set sync.branch <branch>'.
+# Git branch for beads commits — LEGACY, inert in bd 1.0.4.
+# The sync command that consumed this key was removed: 'bd config list' exposes no
+# sync.branch key today, and BEADS_SYNC_BRANCH is likewise unused.
+# Beads now shares state through the git-tracked .beads/issues.jsonl export, which
+# the pre-commit hook regenerates with 'bd export' on whatever branch you commit to.
 # sync-branch: "beads-sync"
 
 # Multi-repo configuration (experimental - bd-307)

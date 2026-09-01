@@ -198,26 +198,30 @@ deciduous trace prune --days 30       # Cleanup old traces
 
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
-## Beads Issue Tracker
+## Issue Tracking
 
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
+This project uses **bd (beads)** for issue tracking.
+Run `bd prime` for workflow context, or install hooks (`bd hooks install`) for auto-injection.
 
-### Quick Reference
+**Quick reference:**
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
+bd ready                                     # Find unblocked work
+bd create "Title" --type task --priority 2   # Create issue
+bd show <id>                                 # View issue details
+bd update <id> --claim                       # Claim work
+bd close <id>                                # Complete work
 ```
+
+For full workflow details: `bd prime`
 
 ### Rules
 
 - Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
 - Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files; search it with `bd memories <keyword>`
 
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
+**Architecture in one line:** issues live in a local Dolt database under `.beads/` (gitignored); this repo has **no Dolt remote** (`bd dolt remote list` reports "No remotes configured", so `bd dolt push` is a no-op), so issues travel between clones solely through the git-tracked `.beads/issues.jsonl` export that the installed `pre-commit` hook regenerates with `bd export` on every commit.
 
 ## Session Completion
 
@@ -230,6 +234,9 @@ bd close <id>         # Complete work
 3. **Update issue status** - Close finished work, update in-progress items
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
+   bd export -o .beads/issues.jsonl  # optional: the pre-commit hook already does this
+   git add .beads
+   git commit -m "<message>"
    git pull --rebase
    git push
    git status  # MUST show "up to date with origin"

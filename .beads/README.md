@@ -26,17 +26,17 @@ bd show <issue-id>
 bd update <issue-id> --status in_progress
 bd update <issue-id> --status done
 
-# Sync with git remote
-bd sync
+# Share issues with the team (the pre-commit hook exports .beads/issues.jsonl for you)
+bd export -o .beads/issues.jsonl && git add .beads && git commit -m "chore: update issues"
 ```
 
 ### Working with Issues
 
 Issues in Beads are:
-- **Git-native**: Stored in `.beads/issues.jsonl` and synced like code
+- **Git-native**: the local Dolt database is gitignored; the tracked `.beads/issues.jsonl` export is what travels between clones
 - **AI-friendly**: CLI-first design works perfectly with AI coding agents
 - **Branch-aware**: Issues can follow your branch workflow
-- **Always in sync**: Auto-syncs with your commits
+- **Exported on commit**: the installed `pre-commit` hook runs `bd export` so the JSONL never lags the database
 
 ## Why Beads?
 
@@ -51,8 +51,8 @@ Issues in Beads are:
 - Fast, lightweight, and stays out of your way
 
 🔧 **Git Integration**
-- Automatic sync with git commits
-- Branch-aware issue tracking
+- `pre-commit` hook exports the database to JSONL on every commit
+- `post-merge` hook re-imports (`bd import`) after a pull
 - Intelligent JSONL merge resolution
 
 ## Get Started with Beads
