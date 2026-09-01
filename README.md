@@ -672,10 +672,13 @@ For existing ready tickets with disjoint ownership:
 
 ```bash
 /workflow-commands:orchestrate beads-a1b2 beads-c3d4 --max-parallel 2
+/workflow-commands:orchestrate ENG-412 ENG-419   # Linear issues, resolved to beads tickets first
 # isolated workers → serial integration → combined verification → publish → close
 ```
 
 Dependent or overlapping open tickets can remain for a later wave. Failed or unverified useful state remains on its recorded branch and worktree for explicit manual recovery and is never adopted by a later orchestration run.
+
+Beads is the execution tracker for agents. Linear issues passed here resolve to their linked beads tickets, or create them, and Linear is then mirrored for human visibility only.
 
 ### Quick Task Workflow
 
